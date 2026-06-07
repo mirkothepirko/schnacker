@@ -1,0 +1,9 @@
+# Python-Abhängigkeiten für Blitztext (Ubuntu).
+# Installation in die venv via setup.sh. PyGObject/GTK kommen aus den System-Paketen
+# (deshalb wird die venv mit --system-site-packages angelegt).
+
+requests>=2.31          # HTTP-Aufrufe an die OpenAI-API (Whisper + Chat Completions)
+sounddevice>=0.4.6      # Mikrofon-Aufnahme (braucht das System-Paket libportaudio2)
+numpy>=1.24             # Audio-Daten als Zahlen-Array (von sounddevice geliefert)
+keyring>=24.0           # API-Key sicher im GNOME-Schlüsselbund speichern
+faster-whisper>=1.0.0   # Lokale, offline Spracherkennung (Ersatz für WhisperKit)

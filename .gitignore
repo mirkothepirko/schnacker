@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+
+# Die Original-Vorlage (nur lokal zum Nachschauen, nicht Teil dieses Projekts)
+original-reference/
+
+# Editor / OS
+.vscode/
+.idea/
+*.swp
+
+# Claude Code lokale Einstellungen (gerätespezifisch, enthält ggf. lokale Pfade/Rechte)
+.claude/settings.local.json
+
+# Secrets — NIEMALS committen! (Key gehört in den GNOME-Schlüsselbund, nicht in Dateien)
+blitztext/OpenAI_API.txt
+*api*key*.txt
+*.secret
+.env
+.env.*
+
+# Heruntergeladene Whisper-Modelle (lokaler Modus) — groß, nicht versionieren
+*.bin
+models/
+.cache/
