@@ -1,17 +1,18 @@
 # Blitztext für Ubuntu
 
 Sprache in Text verwandeln — direkt aus der Menüleiste. Diese App ist eine
-**funktionsgleiche Neuentwicklung** der macOS-App
-[Blitztext](https://github.com/cmagnussen/blitztext-app) für **Ubuntu / GNOME / Wayland**.
+**eigenständige Linux-Neuentwicklung**, inspiriert von der macOS-App
+[Blitztext](https://github.com/cmagnussen/blitztext-app), für **Ubuntu / GNOME / Wayland**.
 
-Sie bietet dieselben vier Workflows wie das Original:
+Sie bietet vier Workflows — die ersten beiden wie im Original, die letzten beiden sind
+**eigene Anpassungen** (Mundart-Übersetzung statt der Originalfunktionen):
 
 | Workflow | Was es tut | Modell |
 |---|---|---|
 | **Blitztext** | Sprache aufnehmen und transkribieren | OpenAI Whisper **oder** lokal (offline) |
 | **Blitztext+** | Transkript zu sauberem Text lektorieren | OpenAI GPT‑4o‑mini |
-| **Blitztext $%&!** | Frust-Nachricht ruhig & sachlich umformulieren | OpenAI GPT‑4o |
-| **Blitztext :)** | Passende Emojis in den Text streuen | OpenAI GPT‑4o‑mini |
+| **Blitztext Platt** | Hochdeutsch nach Plattdeutsch übersetzen | OpenAI GPT‑4o |
+| **Blitztext Basel** | Hochdeutsch nach Baseldütsch übersetzen | OpenAI GPT‑4o |
 
 > Warum eine Neuentwicklung statt Portierung? Das Original ist in Swift/SwiftUI mit
 > Apples WhisperKit geschrieben — das läuft ausschließlich auf macOS. Unter Linux
@@ -43,8 +44,9 @@ Das Skript macht der Reihe nach (und fragt dabei **einmal nach deinem sudo-Passw
    Zwischenablage, ydotool).
 2. Eine **Python-Umgebung** (`.venv`) anlegen und die Python-Pakete installieren
    (`requests`, `sounddevice`, `keyring`, `faster-whisper`).
-3. **Auto-Einfügen (ydotool)** einrichten: eine udev-Regel für den uinput-Zugriff,
-   dich zur Gruppe `input` hinzufügen und den Hintergrund-Dienst `ydotoold` starten.
+3. **Auto-Einfügen (ydotool)** einrichten: eine udev-Regel für den uinput-Zugriff und
+   dich zur Gruppe `input` hinzufügen. (Nur bei neueren ydotool-Versionen wird zusätzlich
+   der Dienst `ydotoold` gestartet — das Ubuntu-24.04-Paket ydotool 0.1.8 braucht keinen.)
 4. Einen **Programmstarter** im Anwendungsmenü anlegen.
 
 > **Wichtig:** Wenn du beim ersten Mal zur Gruppe `input` hinzugefügt wirst, musst du
@@ -79,8 +81,8 @@ mit den Workflows, den Einstellungen und „Beenden".
      **GNOME-Schlüsselbund** abgelegt (nicht im Klartext).
    - **GNOME-Kürzel einrichten** anklicken → legt `Strg+Alt+1` bis `Strg+Alt+4` für die vier
      Workflows an.
-3. Tab **„Anpassen"**: Schreibstil, eigene Anweisungen, Eigennamen, Emoji-Dichte und der
-   **Sichere Lokale Modus** (offline-Transkription) lassen sich hier einstellen.
+3. Tab **„Anpassen"**: Schreibstil, eigene Anweisungen, Eigennamen, die Mundart-Prompts
+   (Platt/Basel) und der **Sichere Lokale Modus** (offline-Transkription) lassen sich hier einstellen.
 
 ---
 
@@ -97,16 +99,16 @@ mit den Workflows, den Einstellungen und „Beenden".
   |---|---|
   | `Strg+Alt+1` | Blitztext (Diktat) |
   | `Strg+Alt+2` | Blitztext+ |
-  | `Strg+Alt+3` | Blitztext $%&! |
-  | `Strg+Alt+4` | Blitztext :) |
+  | `Strg+Alt+3` | Blitztext Platt |
+  | `Strg+Alt+4` | Blitztext Basel |
 
 ### Sicherer Lokaler Modus (offline)
 
 Im Tab „Anpassen" (oder direkt im Hauptmenü über den Schalter) lässt sich der lokale
 Modus einschalten. Dann wird **nichts an OpenAI gesendet** — die Transkription läuft mit
 **faster‑whisper** komplett auf deinem Rechner. Das Modell (Standard: „Whisper Small")
-wird beim ersten Mal heruntergeladen. Hinweis: Die drei KI-Workflows (+, $%&!, :)) sind
-im lokalen Modus pausiert, weil sie OpenAI brauchen — genau wie im Original.
+wird beim ersten Mal heruntergeladen. Hinweis: Die drei KI-Workflows (Blitztext+, Platt,
+Basel) sind im lokalen Modus pausiert, weil sie OpenAI brauchen — genau wie im Original.
 
 ---
 
@@ -134,8 +136,9 @@ Wayland sperrt aus Sicherheitsgründen einige Dinge, die das macOS-Original nutz
   Fenster geht der Text in die Zwischenablage (Wayland erlaubt kein zuverlässiges
   Zurückspringen ins vorherige Fenster).
 
-Alles andere — die vier Workflows, dieselben KI-Prompts/Modelle, die deutschen Texte und
-die Bedienlogik — ist 1:1 nachgebaut.
+Die Bedienlogik, die deutschen Texte und die ersten beiden Workflows (Diktat, Blitztext+)
+folgen dem Original. **Blitztext Platt** und **Blitztext Basel** sind eigene Anpassungen und
+ersetzen die Originalfunktionen „$%&!" (Frust entschärfen) und „:)" (Emojis einstreuen).
 
 ---
 
@@ -168,7 +171,13 @@ setup.sh                Einrichtungs-Skript
 
 ---
 
-## Lizenz
+## Lizenz & Herkunft
 
-Das Original steht unter der MIT-Lizenz. Diese Nachbildung folgt demselben Geist:
-ein Lern- und Experimentierprojekt, ohne Gewähr.
+Das Original [Blitztext](https://github.com/cmagnussen/blitztext-app) steht unter der
+**MIT-Lizenz**; der Copyright-Hinweis bleibt in der Datei [LICENSE](LICENSE) erhalten. Diese
+Linux-Neuentwicklung übernimmt Teile davon und steht ebenfalls unter MIT — ein Lern- und
+Experimentierprojekt, ohne Gewähr.
+
+**Hinweis zur Marke:** Die MIT-Lizenz gewährt **nicht** die Rechte am Namen, Logo oder der
+Optik des Originals (siehe dessen `TRADEMARKS.md`). Wer einen Fork als eigene App oder
+eigenen Dienst veröffentlicht, soll einen **eigenen Namen und eigenes Branding** verwenden.

@@ -21,8 +21,8 @@ _WORKFLOW_EMOJI: dict[WorkflowType, str] = {
     WorkflowType.TRANSCRIPTION: "🎙️",
     WorkflowType.LOCAL_TRANSCRIPTION: "🔒",
     WorkflowType.TEXT_IMPROVER: "✨",
-    WorkflowType.DAMPF_ABLASSEN: "🔥",
-    WorkflowType.EMOJI_TEXT: "🙂",
+    WorkflowType.DAMPF_ABLASSEN: "🌾",
+    WorkflowType.EMOJI_TEXT: "🇨🇭",
 }
 
 

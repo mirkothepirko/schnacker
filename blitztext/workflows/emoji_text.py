@@ -1,6 +1,7 @@
-"""Blitztext :) (Emojis hinzufügen) — portiert aus EmojiTextWorkflow.swift.
+"""Blitztext Basel (Hochdeutsch → Baseldütsch) — basiert auf EmojiTextWorkflow.swift.
 
-Zwei Phasen: Whisper-Transkription, dann GPT streut passende Emojis ein.
+Zwei Phasen: Whisper-Transkription, dann GPT übersetzt den Text ins Baseldütsche.
+(Interner Name bleibt "emojiText", damit Tastenkürzel und Einstellungen stabil bleiben.)
 """
 
 from __future__ import annotations
@@ -26,9 +27,9 @@ class EmojiTextWorkflow(Workflow):
         cleaned_raw = self._reject_if_artifact(raw_text, duration)
         self._check_cancelled()
 
-        # Phase 2: Emojis einfügen
-        self._set_phase(PhaseState.running("Emojis werden eingefügt ..."))
-        result = llm.add_emojis(cleaned_raw, self.settings)
+        # Phase 2: GPT übersetzt ins Baseldütsche
+        self._set_phase(PhaseState.running("Wird ins Baseldütsch übersetzt ..."))
+        result = llm.basel_deutsch(cleaned_raw, self.settings.system_prompt)
         if result.strip() == "KEINE_AUFNAHME_ERKANNT":
             raise RuntimeError("Keine Aufnahme erkannt.")
         return result

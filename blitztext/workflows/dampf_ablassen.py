@@ -1,6 +1,7 @@
-"""Blitztext $%&! (Frust entschärfen) — portiert aus DampfAblassenWorkflow.swift.
+"""Blitztext Platt (Hochdeutsch → Plattdeutsch) — basiert auf DampfAblassenWorkflow.swift.
 
-Zwei Phasen: Whisper-Transkription, dann GPT formuliert die Nachricht ruhig um.
+Zwei Phasen: Whisper-Transkription, dann GPT übersetzt den Text ins Plattdeutsche.
+(Interner Name bleibt "dampfAblassen", damit Tastenkürzel und Einstellungen stabil bleiben.)
 """
 
 from __future__ import annotations
@@ -26,8 +27,8 @@ class DampfAblassenWorkflow(Workflow):
         cleaned_raw = self._reject_if_artifact(raw_text, duration)
         self._check_cancelled()
 
-        # Phase 2: GPT formuliert um
-        self._set_phase(PhaseState.running("Wird umformuliert ..."))
+        # Phase 2: GPT übersetzt ins Plattdeutsche
+        self._set_phase(PhaseState.running("Wird ins Platt übersetzt ..."))
         answer = llm.dampf_ablassen(cleaned_raw, self.settings.system_prompt)
         if answer.strip() == "KEINE_AUFNAHME_ERKANNT":
             raise RuntimeError("Keine Aufnahme erkannt.")

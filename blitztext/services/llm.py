@@ -17,7 +17,7 @@ TIMEOUT_SECONDS = 45
 
 # Modelle wie im Original (enum RewriteModel).
 MODEL_FAST_EDIT = "gpt-4o-mini"  # Verbessern & Emojis
-MODEL_RAGE = "gpt-4o"            # Blitztext $%&!
+MODEL_RAGE = "gpt-4o"            # Blitztext Platt (kräftiges Modell für Dialekt-Übersetzung)
 
 
 class LLMError(Exception):
@@ -37,6 +37,11 @@ def dampf_ablassen(text: str, system_prompt: str, model: str = MODEL_RAGE) -> st
 
 def add_emojis(text: str, settings: EmojiTextSettings, model: str = MODEL_FAST_EDIT) -> str:
     return _complete(text, _build_emoji_system_prompt(settings.emoji_density), model, temperature=0.3)
+
+
+def basel_deutsch(text: str, system_prompt: str, model: str = MODEL_RAGE) -> str:
+    """Übersetzt Hochdeutsch -> Baseldütsch (Blitztext Basel)."""
+    return _complete(text, system_prompt, model, temperature=0.4)
 
 
 # MARK: - HTTP-Aufruf ---------------------------------------------------------

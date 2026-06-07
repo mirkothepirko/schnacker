@@ -17,7 +17,7 @@ gi.require_version("Gtk", "3.0")
 from gi.repository import GLib, Gtk  # noqa: E402
 
 from .. import shortcuts
-from ..models import EmojiDensity, HotkeyMode, TextTone, WorkflowType
+from ..models import HotkeyMode, TextTone, WorkflowType
 from ..services import keychain
 from ..services import local_transcription as local
 from ..services import paste
@@ -212,7 +212,7 @@ class SettingsView(Gtk.Box):
 
     def _dampf_section(self) -> Gtk.Box:
         s = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
-        s.pack_start(_section_label("Blitztext $%&!"), False, False, 0)
+        s.pack_start(_section_label("Blitztext Platt"), False, False, 0)
         s.pack_start(Gtk.Label(label="Eigene Anweisung", xalign=0), False, False, 0)
         self._dampf_prompt = self._make_textview(
             self.app_state.settings.dampf_ablassen.system_prompt, height=90)
@@ -226,20 +226,17 @@ class SettingsView(Gtk.Box):
 
     def _emoji_section(self) -> Gtk.Box:
         s = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
-        s.pack_start(_section_label("Blitztext :)"), False, False, 0)
-        s.pack_start(Gtk.Label(label="Emoji-Dichte", xalign=0), False, False, 0)
-        self._density_combo = Gtk.ComboBoxText()
-        for density in EmojiDensity:
-            self._density_combo.append(density.value, density.display_name)
-        self._density_combo.set_active_id(self.app_state.settings.emoji_text.emoji_density.value)
-        self._density_combo.connect("changed", lambda c: self._set_density(c.get_active_id()))
-        s.pack_start(self._density_combo, False, False, 0)
+        s.pack_start(_section_label("Blitztext Basel"), False, False, 0)
+        s.pack_start(Gtk.Label(label="Eigene Anweisung", xalign=0), False, False, 0)
+        self._emoji_prompt = self._make_textview(
+            self.app_state.settings.emoji_text.system_prompt, height=90)
+        self._emoji_prompt.get_buffer().connect("changed", self._on_emoji_prompt_changed)
+        s.pack_start(self._frame(self._emoji_prompt), False, False, 0)
         return s
 
-    def _set_density(self, density_id) -> None:
-        if density_id:
-            self.app_state.settings.emoji_text.emoji_density = EmojiDensity(density_id)
-            self.app_state.save_settings()
+    def _on_emoji_prompt_changed(self, buf) -> None:
+        self.app_state.settings.emoji_text.system_prompt = self._buffer_text(buf)
+        self.app_state.save_settings()
 
     def _terms_section(self) -> Gtk.Box:
         s = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)

@@ -129,7 +129,9 @@ def _load_dampf_ablassen(d: dict) -> DampfAblassenSettings:
 
 
 def _load_emoji_text(d: dict) -> EmojiTextSettings:
+    defaults = EmojiTextSettings()
     return EmojiTextSettings(
+        system_prompt=str(d.get("systemPrompt", defaults.system_prompt)),
         emoji_density=_enum_or_default(EmojiDensity, d.get("emojiDensity"), EmojiDensity.MITTEL),
         custom_name=str(d.get("customName", "")),
     )
@@ -167,6 +169,7 @@ def save(bundle: SettingsBundle) -> None:
             "customName": bundle.dampf_ablassen.custom_name,
         },
         "emojiText": {
+            "systemPrompt": bundle.emoji_text.system_prompt,
             "emojiDensity": bundle.emoji_text.emoji_density.value,
             "customName": bundle.emoji_text.custom_name,
         },

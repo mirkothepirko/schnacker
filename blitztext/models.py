@@ -38,8 +38,8 @@ class WorkflowType(str, Enum):
             WorkflowType.TRANSCRIPTION: "Blitztext",
             WorkflowType.LOCAL_TRANSCRIPTION: "Blitztext Lokal",
             WorkflowType.TEXT_IMPROVER: "Blitztext+",
-            WorkflowType.DAMPF_ABLASSEN: "Blitztext $%&!",
-            WorkflowType.EMOJI_TEXT: "Blitztext :)",
+            WorkflowType.DAMPF_ABLASSEN: "Blitztext Platt",
+            WorkflowType.EMOJI_TEXT: "Blitztext Basel",
         }[self]
 
     @property
@@ -50,8 +50,8 @@ class WorkflowType(str, Enum):
             WorkflowType.TRANSCRIPTION: "mic",
             WorkflowType.LOCAL_TRANSCRIPTION: "lock",
             WorkflowType.TEXT_IMPROVER: "text-check",
-            WorkflowType.DAMPF_ABLASSEN: "flame",
-            WorkflowType.EMOJI_TEXT: "smiley",
+            WorkflowType.DAMPF_ABLASSEN: "translate",
+            WorkflowType.EMOJI_TEXT: "translate",
         }[self]
 
     @property
@@ -60,8 +60,8 @@ class WorkflowType(str, Enum):
             WorkflowType.TRANSCRIPTION: "Sprache rein. Text raus.",
             WorkflowType.LOCAL_TRANSCRIPTION: "Nur lokal. Kein Server.",
             WorkflowType.TEXT_IMPROVER: "Geschrieben sprechen.",
-            WorkflowType.DAMPF_ABLASSEN: "Frust rein. Entspannt raus.",
-            WorkflowType.EMOJI_TEXT: "Text rein. Emojis dazu.",
+            WorkflowType.DAMPF_ABLASSEN: "Hochdeutsch rein. Platt raus.",
+            WorkflowType.EMOJI_TEXT: "Hochdeutsch rein. Baseldütsch raus.",
         }[self]
 
     @property
@@ -156,15 +156,29 @@ class HotkeyMode(str, Enum):
 # MARK: - Einstellungen (Defaults exakt wie im Original) ----------------------
 
 
-# Der lange Standard-System-Prompt für "Blitztext $%&!" — wörtlich aus DampfAblassenSettings.
+# Standard-System-Prompt für "Blitztext Platt" — übersetzt Hochdeutsch nach Plattdeutsch.
+# (Workflow heißt intern weiter "dampfAblassen", damit Tastenkürzel/Settings stabil bleiben.)
 DAMPF_ABLASSEN_DEFAULT_PROMPT = (
-    "Du erhältst ein emotional gesprochenes Transkript. Erkenne zuerst das eigentliche Ziel, "
-    "Anliegen und den wahren Frust der Person. Formuliere daraus eine klare, respektvolle und "
-    "wirksame Nachricht, mit der die Person ihr Ziel eher erreicht. Bewahre relevante Fakten, "
-    "konkrete Probleme, Grenzen, Erwartungen und die nötige Dringlichkeit. Entferne Beleidigungen, "
-    "Drohungen, Sarkasmus, Unterstellungen und unnötige Eskalation. Wenn mehrere Vorwürfe genannt "
-    "werden, verdichte sie auf die entscheidenden Kernpunkte. Der Ton soll ruhig, menschlich, "
-    "bestimmt und lösungsorientiert sein. Gib NUR die fertige Nachricht zurück."
+    "Du bist ein Übersetzer für Plattdeutsch (Niederdeutsch). Du bekommst einen auf Hochdeutsch "
+    "gesprochenen Text. Übersetze ihn in natürliches, gut lesbares Plattdeutsch. Bewahre Sinn, "
+    "Inhalt und Tonfall des Originals. Übersetze sinngemäß und idiomatisch, nicht Wort für Wort, "
+    "und nutze typische plattdeutsche Wendungen, wo sie passen. Eigennamen, Zahlen, Datums- und "
+    "Uhrzeitangaben sowie Fachbegriffe bleiben unverändert. Gib NUR den plattdeutschen Text "
+    "zurück — keine Erklärungen und keine hochdeutsche Fassung daneben."
+)
+
+
+# Standard-System-Prompt für "Blitztext Basel" — übersetzt Hochdeutsch nach Baseldütsch.
+# (Workflow heißt intern weiter "emojiText", damit Tastenkürzel/Settings stabil bleiben.)
+BASEL_DEFAULT_PROMPT = (
+    "Du bist ein Übersetzer für Baseldütsch (das alemannische Schweizerdeutsch aus dem Raum "
+    "Basel). Du bekommst einen auf Hochdeutsch gesprochenen Text. Übersetze ihn in natürliches, "
+    "gut lesbares Baseldütsch, wie man es in der Stadt Basel spricht. Bewahre Sinn, Inhalt und "
+    "Tonfall des Originals. Übersetze sinngemäß und idiomatisch, nicht Wort für Wort, und nutze "
+    "Basel-typische Wörter und Schreibweisen (z. B. 'y' für langes i wie in 'Zyt', 'Wyn'; niemals "
+    "'ß', stattdessen 'ss'). Eigennamen, Zahlen, Datums- und Uhrzeitangaben sowie Fachbegriffe "
+    "bleiben unverändert. Gib NUR den baseldütschen Text zurück — keine Erklärungen und keine "
+    "hochdeutsche Fassung daneben."
 )
 
 
@@ -214,7 +228,8 @@ class DampfAblassenSettings:
 
 @dataclass
 class EmojiTextSettings:
-    emoji_density: EmojiDensity = EmojiDensity.MITTEL
+    system_prompt: str = BASEL_DEFAULT_PROMPT
+    emoji_density: EmojiDensity = EmojiDensity.MITTEL  # nicht mehr genutzt (war: Emoji-Workflow)
     custom_name: str = ""
 
 
