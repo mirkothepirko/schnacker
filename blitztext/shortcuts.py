@@ -62,7 +62,7 @@ def install_gnome_shortcuts() -> str:
             paths.append(kb_path)
             command = (f"bash -c 'cd {project_dir} && "
                        f"{python} -m blitztext --trigger {trigger_arg(t)}'")
-            gset(f"{item_schema}:{kb_path}", "name", f"Blitztext: {t.display_name}")
+            gset(f"{item_schema}:{kb_path}", "name", f"Schnacker: {t.display_name}")
             gset(f"{item_schema}:{kb_path}", "command", command)
             gset(f"{item_schema}:{kb_path}", "binding", GSETTINGS_BINDING[t])
 

@@ -59,7 +59,7 @@ def send_trigger(workflow_name: str) -> bool:
 
 
 def is_running() -> bool:
-    """True, wenn bereits eine Blitztext-Instanz auf dem Socket lauscht."""
+    """True, wenn bereits eine Schnacker-Instanz auf dem Socket lauscht."""
     try:
         client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         client.settimeout(1)
@@ -73,7 +73,7 @@ def is_running() -> bool:
 # MARK: - Haupt-App -----------------------------------------------------------
 
 
-class BlitztextApp:
+class SchnackerApp:
     def __init__(self) -> None:
         self.app_state = AppState()
         self.renderer = TrayIconRenderer()
@@ -85,7 +85,7 @@ class BlitztextApp:
             "blitztext", "idle_0", AppIndicator.IndicatorCategory.APPLICATION_STATUS)
         self.indicator.set_icon_theme_path(self.renderer.theme_path)
         self.indicator.set_status(AppIndicator.IndicatorStatus.ACTIVE)
-        self.indicator.set_title("Blitztext")
+        self.indicator.set_title("Schnacker")
         self.indicator.set_menu(self._build_menu())
 
         # Popover-Fenster
@@ -103,7 +103,7 @@ class BlitztextApp:
     def _build_menu(self) -> Gtk.Menu:
         menu = Gtk.Menu()
 
-        open_item = Gtk.MenuItem(label="Blitztext öffnen")
+        open_item = Gtk.MenuItem(label="Schnacker öffnen")
         open_item.connect("activate", lambda _i: self.show_popover())
         menu.append(open_item)
         menu.append(Gtk.SeparatorMenuItem())
@@ -164,14 +164,14 @@ class BlitztextApp:
         kind = status.kind
         t = status.workflow_type
         if kind is StatusKind.IDLE:
-            return "Blitztext ist bereit"
-        name = t.display_name if t else "Blitztext"
+            return "Schnacker ist bereit"
+        name = t.display_name if t else "Schnacker"
         return {
             StatusKind.RECORDING: f"{name}: Aufnahme läuft",
             StatusKind.PROCESSING: f"{name}: Verarbeitung läuft",
             StatusKind.SUCCESS: f"{name}: Fertig",
             StatusKind.ERROR: f"{name}: Fehler",
-        }.get(kind, "Blitztext")
+        }.get(kind, "Schnacker")
 
     def _on_ui_refresh(self) -> None:
         # Wird teils aus Hintergrund-Threads über GLib.idle_add gerufen -> hier sind wir sicher.

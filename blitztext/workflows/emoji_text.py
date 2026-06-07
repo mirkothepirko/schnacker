@@ -1,4 +1,4 @@
-"""Blitztext Basel (Hochdeutsch → Baseldütsch) — basiert auf EmojiTextWorkflow.swift.
+"""Schnacker Basel (Hochdeutsch → Baseldütsch) — basiert auf EmojiTextWorkflow.swift.
 
 Zwei Phasen: Whisper-Transkription, dann GPT übersetzt den Text ins Baseldütsche.
 (Interner Name bleibt "emojiText", damit Tastenkürzel und Einstellungen stabil bleiben.)

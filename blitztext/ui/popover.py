@@ -189,7 +189,7 @@ class PopoverWindow(Gtk.Window):
         header.set_margin_start(16)
         header.set_margin_end(16)
         header.set_margin_bottom(8)
-        title = Gtk.Label(label="Blitztext")
+        title = Gtk.Label(label="Schnacker")
         title.get_style_context().add_class("app-title")
         header.pack_start(title, False, False, 0)
         badge = Gtk.Label(label="Ubuntu Preview")
@@ -266,7 +266,7 @@ class PopoverWindow(Gtk.Window):
         name = Gtk.Label(label="Sicherer lokaler Modus" if secure else "Online Whisper", xalign=0)
         name.get_style_context().add_class("workflow-name")
         sub_text = (f"Lokal mit {st.selected_local_model_display}." if secure and st.selected_local_model_is_installed
-                    else "Blitztext nutzt gerade die OpenAI-Transkription." if not secure
+                    else "Schnacker nutzt gerade die OpenAI-Transkription." if not secure
                     else f"{st.selected_local_model_display} ist noch nicht installiert.")
         sub = Gtk.Label(label=sub_text, xalign=0)
         sub.get_style_context().add_class("workflow-subtitle")
@@ -302,7 +302,7 @@ class PopoverWindow(Gtk.Window):
         box.set_margin_start(16)
         box.set_margin_end(16)
 
-        title = Gtk.Label(label="Willkommen bei Blitztext", xalign=0)
+        title = Gtk.Label(label="Willkommen bei Schnacker", xalign=0)
         title.get_style_context().add_class("big-title")
         box.pack_start(title, False, False, 0)
 
@@ -316,7 +316,7 @@ class PopoverWindow(Gtk.Window):
         steps = [
             ("1", "OpenAI Key speichern", "Öffne die Einstellungen und trage deinen OpenAI API Key ein."),
             ("2", "Auto-Einfügen einrichten", "Einmal ./setup.sh ausführen (installiert ydotool)."),
-            ("3", "Workflow wählen", "Blitztext oder einen Verbesserer-Workflow aus dem Menü starten."),
+            ("3", "Workflow wählen", "Schnacker oder einen Verbesserer-Workflow aus dem Menü starten."),
         ]
         for number, head, detail in steps:
             row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)

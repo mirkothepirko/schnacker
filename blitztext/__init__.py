@@ -1,4 +1,4 @@
-"""Blitztext für Ubuntu — Sprache zu Text in der Menüleiste.
+"""Schnacker für Ubuntu — Sprache zu Text in der Menüleiste.
 
 Eine funktionsgleiche Neuimplementierung der macOS-App Blitztext für
 Ubuntu/GNOME/Wayland. Aufbau spiegelt das Original (siehe original-reference/):
@@ -12,4 +12,4 @@ Ubuntu/GNOME/Wayland. Aufbau spiegelt das Original (siehe original-reference/):
 """
 
 __version__ = "0.1.0"
-APP_NAME = "Blitztext"
+APP_NAME = "Schnacker"

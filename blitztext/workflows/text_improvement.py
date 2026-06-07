@@ -1,4 +1,4 @@
-"""Blitztext+ (Text verbessern) — portiert aus TextImprovementWorkflow.swift.
+"""Schnacker+ (Text verbessern) — portiert aus TextImprovementWorkflow.swift.
 
 Zwei Phasen: erst Whisper-Transkription, dann GPT-Lektorat.
 """

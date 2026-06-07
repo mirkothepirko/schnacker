@@ -173,7 +173,7 @@ class SettingsView(Gtk.Box):
 
     def _text_improver_section(self) -> Gtk.Box:
         s = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
-        s.pack_start(_section_label("Blitztext+"), False, False, 0)
+        s.pack_start(_section_label("Schnacker+"), False, False, 0)
 
         s.pack_start(Gtk.Label(label="Schreibstil", xalign=0), False, False, 0)
         self._tone_combo = Gtk.ComboBoxText()
@@ -212,7 +212,7 @@ class SettingsView(Gtk.Box):
 
     def _dampf_section(self) -> Gtk.Box:
         s = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
-        s.pack_start(_section_label("Blitztext Platt"), False, False, 0)
+        s.pack_start(_section_label("Schnacker Platt"), False, False, 0)
         s.pack_start(Gtk.Label(label="Eigene Anweisung", xalign=0), False, False, 0)
         self._dampf_prompt = self._make_textview(
             self.app_state.settings.dampf_ablassen.system_prompt, height=90)
@@ -226,7 +226,7 @@ class SettingsView(Gtk.Box):
 
     def _emoji_section(self) -> Gtk.Box:
         s = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
-        s.pack_start(_section_label("Blitztext Basel"), False, False, 0)
+        s.pack_start(_section_label("Schnacker Basel"), False, False, 0)
         s.pack_start(Gtk.Label(label="Eigene Anweisung", xalign=0), False, False, 0)
         self._emoji_prompt = self._make_textview(
             self.app_state.settings.emoji_text.system_prompt, height=90)

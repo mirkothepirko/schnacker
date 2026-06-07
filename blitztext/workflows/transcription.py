@@ -1,4 +1,4 @@
-"""Blitztext (Diktat) — portiert aus TranscriptionWorkflow.swift.
+"""Schnacker (Diktat) — portiert aus TranscriptionWorkflow.swift.
 
 Nimmt auf und transkribiert — online über OpenAI Whisper oder lokal über
 faster-whisper, je nach gewähltem Backend.

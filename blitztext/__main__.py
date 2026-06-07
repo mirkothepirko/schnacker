@@ -3,7 +3,7 @@
 Aufrufvarianten:
     python -m blitztext                      App starten (Menüleisten-Symbol)
     python -m blitztext --trigger <workflow> Workflow starten/stoppen (für GNOME-Kürzel)
-    python -m blitztext --install-shortcuts  GNOME-Kürzel Super+1..4 einrichten
+    python -m blitztext --install-shortcuts  GNOME-Kürzel Strg+Alt+1..4 einrichten
 """
 
 from __future__ import annotations
@@ -15,12 +15,12 @@ from .models import WorkflowType
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(prog="blitztext", description="Blitztext für Ubuntu")
+    parser = argparse.ArgumentParser(prog="blitztext", description="Schnacker für Ubuntu")
     parser.add_argument("--trigger", metavar="WORKFLOW",
                         help="Workflow per Tastenkürzel starten/stoppen "
                              "(transcription, textImprover, dampfAblassen, emojiText).")
     parser.add_argument("--install-shortcuts", action="store_true",
-                        help="GNOME-Tastenkürzel Super+1 bis Super+4 einrichten.")
+                        help="GNOME-Tastenkürzel Strg+Alt+1 bis Strg+Alt+4 einrichten.")
     args = parser.parse_args()
 
     if args.install_shortcuts:
@@ -39,16 +39,16 @@ def main() -> None:
 
         from .app import send_trigger
         if not send_trigger(args.trigger):
-            print("Blitztext läuft nicht. Bitte zuerst die App starten.", file=sys.stderr)
+            print("Schnacker läuft nicht. Bitte zuerst die App starten.", file=sys.stderr)
             sys.exit(1)
         return
 
     # Normale App starten — aber nur eine Instanz gleichzeitig.
-    from .app import BlitztextApp, is_running
+    from .app import SchnackerApp, is_running
     if is_running():
-        print("Blitztext läuft bereits (siehe Menüleisten-Symbol).")
+        print("Schnacker läuft bereits (siehe Menüleisten-Symbol).")
         return
-    BlitztextApp().run()
+    SchnackerApp().run()
 
 
 if __name__ == "__main__":

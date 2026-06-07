@@ -1,4 +1,4 @@
-"""Blitztext Platt (Hochdeutsch → Plattdeutsch) — basiert auf DampfAblassenWorkflow.swift.
+"""Schnacker Platt (Hochdeutsch → Plattdeutsch) — basiert auf DampfAblassenWorkflow.swift.
 
 Zwei Phasen: Whisper-Transkription, dann GPT übersetzt den Text ins Plattdeutsche.
 (Interner Name bleibt "dampfAblassen", damit Tastenkürzel und Einstellungen stabil bleiben.)

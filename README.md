@@ -1,4 +1,4 @@
-# Blitztext für Ubuntu
+# Schnacker für Ubuntu
 
 Sprache in Text verwandeln — direkt aus der Menüleiste. Diese App ist eine
 **eigenständige Linux-Neuentwicklung**, inspiriert von der macOS-App
@@ -9,10 +9,10 @@ Sie bietet vier Workflows — die ersten beiden wie im Original, die letzten bei
 
 | Workflow | Was es tut | Modell |
 |---|---|---|
-| **Blitztext** | Sprache aufnehmen und transkribieren | OpenAI Whisper **oder** lokal (offline) |
-| **Blitztext+** | Transkript zu sauberem Text lektorieren | OpenAI GPT‑4o‑mini |
-| **Blitztext Platt** | Hochdeutsch nach Plattdeutsch übersetzen | OpenAI GPT‑4o |
-| **Blitztext Basel** | Hochdeutsch nach Baseldütsch übersetzen | OpenAI GPT‑4o |
+| **Schnacker** | Sprache aufnehmen und transkribieren | OpenAI Whisper **oder** lokal (offline) |
+| **Schnacker+** | Transkript zu sauberem Text lektorieren | OpenAI GPT‑4o‑mini |
+| **Schnacker Platt** | Hochdeutsch nach Plattdeutsch übersetzen | OpenAI GPT‑4o |
+| **Schnacker Basel** | Hochdeutsch nach Baseldütsch übersetzen | OpenAI GPT‑4o |
 
 > Warum eine Neuentwicklung statt Portierung? Das Original ist in Swift/SwiftUI mit
 > Apples WhisperKit geschrieben — das läuft ausschließlich auf macOS. Unter Linux
@@ -61,7 +61,7 @@ Das Skript macht der Reihe nach (und fragt dabei **einmal nach deinem sudo-Passw
 .venv/bin/python -m blitztext
 ```
 
-…oder einfach **„Blitztext"** im Anwendungsmenü suchen und anklicken.
+…oder einfach **„Schnacker"** im Anwendungsmenü suchen und anklicken.
 
 Es erscheint ein **Symbol oben rechts in der Leiste**. Ein Klick darauf öffnet das Menü
 mit den Workflows, den Einstellungen und „Beenden".
@@ -97,17 +97,17 @@ mit den Workflows, den Einstellungen und „Beenden".
 
   | Kürzel | Workflow |
   |---|---|
-  | `Strg+Alt+1` | Blitztext (Diktat) |
-  | `Strg+Alt+2` | Blitztext+ |
-  | `Strg+Alt+3` | Blitztext Platt |
-  | `Strg+Alt+4` | Blitztext Basel |
+  | `Strg+Alt+1` | Schnacker (Diktat) |
+  | `Strg+Alt+2` | Schnacker+ |
+  | `Strg+Alt+3` | Schnacker Platt |
+  | `Strg+Alt+4` | Schnacker Basel |
 
 ### Sicherer Lokaler Modus (offline)
 
 Im Tab „Anpassen" (oder direkt im Hauptmenü über den Schalter) lässt sich der lokale
 Modus einschalten. Dann wird **nichts an OpenAI gesendet** — die Transkription läuft mit
 **faster‑whisper** komplett auf deinem Rechner. Das Modell (Standard: „Whisper Small")
-wird beim ersten Mal heruntergeladen. Hinweis: Die drei KI-Workflows (Blitztext+, Platt,
+wird beim ersten Mal heruntergeladen. Hinweis: Die drei KI-Workflows (Schnacker+, Platt,
 Basel) sind im lokalen Modus pausiert, weil sie OpenAI brauchen — genau wie im Original.
 
 ---
@@ -136,8 +136,8 @@ Wayland sperrt aus Sicherheitsgründen einige Dinge, die das macOS-Original nutz
   Fenster geht der Text in die Zwischenablage (Wayland erlaubt kein zuverlässiges
   Zurückspringen ins vorherige Fenster).
 
-Die Bedienlogik, die deutschen Texte und die ersten beiden Workflows (Diktat, Blitztext+)
-folgen dem Original. **Blitztext Platt** und **Blitztext Basel** sind eigene Anpassungen und
+Die Bedienlogik, die deutschen Texte und die ersten beiden Workflows (Diktat, Schnacker+)
+folgen dem Original. **Schnacker Platt** und **Schnacker Basel** sind eigene Anpassungen und
 ersetzen die Originalfunktionen „$%&!" (Frust entschärfen) und „:)" (Emojis einstreuen).
 
 ---
