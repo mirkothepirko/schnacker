@@ -127,8 +127,10 @@ class PopoverWindow(Gtk.Window):
     def _on_key_press(self, _w, event) -> bool:
         if event.keyval == Gdk.KEY_Escape:
             wf = self.app_state.active_workflow
-            if wf and wf.phase.is_active:
-                self.app_state.stop_current_workflow()
+            if wf and wf.is_recording:
+                self.app_state.cancel_recording()  # verwerfen, nicht einfügen (wie blablatext)
+            elif wf and wf.phase.is_active:
+                pass  # verarbeitet gerade (API-Aufruf) -> nichts mehr abzubrechen
             else:
                 self.hide_popover()
             return True

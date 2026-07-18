@@ -195,6 +195,26 @@ class AppState:
         if self.active_workflow:
             self.active_workflow.stop()
 
+    def start_push_to_talk(self) -> None:
+        """Strg+Super gehalten: startet Diktat, sofern nicht schon etwas läuft
+        (wie blablatexts Push-to-Talk, das Standardprofil ist immer TRANSCRIPTION)."""
+        if self.active_workflow and self.active_workflow.phase.is_active:
+            return
+        self.start_workflow(WorkflowType.TRANSCRIPTION, LaunchSource.HOTKEY_BACKGROUND)
+
+    def stop_push_to_talk(self) -> None:
+        """Strg+Super losgelassen: Aufnahme stoppen -> verarbeiten -> automatisch einfügen."""
+        if self.active_workflow and self.active_workflow.is_recording:
+            self.stop_current_workflow()
+
+    def cancel_recording(self) -> None:
+        """Esc: laufende Aufnahme verwerfen, OHNE sie zu verarbeiten oder einzufügen
+        (Pendant zu blablatexts Esc-Abbruch/Wispr Flows "Cancel Session"). Wirkt nur,
+        während tatsächlich aufgenommen wird — während der Verarbeitung (API-Aufruf)
+        gibt es nichts mehr zum Verwerfen."""
+        if self.active_workflow and self.active_workflow.is_recording:
+            self.reset_current_workflow()
+
     def reset_current_workflow(self) -> None:
         if self.active_workflow:
             self.active_workflow.reset()

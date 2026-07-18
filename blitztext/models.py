@@ -138,8 +138,11 @@ class TranscriptionBackend(str, Enum):
 
 
 class HotkeyMode(str, Enum):
-    HOLD = "hold"      # Original: halten = aufnehmen. Unter Wayland wie TOGGLE (Hinweis im UI).
-    TOGGLE = "toggle"  # 1x drücken = starten, nochmal/Escape = stoppen
+    # HOLD: zusätzlich zu den Strg+Alt+1..4-Kürzeln ist Push-to-Talk (Strg+Super
+    # halten) aktiv — läuft über einen rohen Tastatur-Listener (evdev), siehe
+    # services/global_hotkeys.py, weil GNOME-Systemkürzel kein Halten/Loslassen können.
+    HOLD = "hold"
+    TOGGLE = "toggle"  # nur die Kürzel oben: 1x drücken = starten, nochmal = stoppen
 
     @property
     def display_name(self) -> str:
@@ -148,8 +151,8 @@ class HotkeyMode(str, Enum):
     @property
     def description(self) -> str:
         return {
-            HotkeyMode.HOLD: "Tasten halten zum Aufnehmen, loslassen zum Stoppen",
-            HotkeyMode.TOGGLE: "Einmal drücken zum Starten, nochmal oder Escape zum Stoppen",
+            HotkeyMode.HOLD: "Zusätzlich Strg+Super halten zum Aufnehmen, loslassen zum Einfügen",
+            HotkeyMode.TOGGLE: "Nur die Kürzel oben: einmal drücken zum Starten, nochmal zum Stoppen",
         }[self]
 
 

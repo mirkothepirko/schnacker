@@ -158,7 +158,9 @@ class SettingsView(Gtk.Box):
         s.pack_start(self._mode_combo, False, False, 0)
 
         note = Gtk.Label(
-            label="Hinweis: Unter Wayland startet/stoppt das Kürzel die Aufnahme (Drücken-Modus).",
+            label="Im Modus Halten zusätzlich: Strg+Super (Windows-Taste) halten zum "
+                  "Aufnehmen, loslassen zum automatischen Einfügen. Esc bricht eine laufende "
+                  "Aufnahme jederzeit ab, ohne sie einzufügen.",
             xalign=0)
         note.get_style_context().add_class("hint-text")
         note.set_line_wrap(True)

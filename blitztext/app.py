@@ -30,7 +30,8 @@ except (ValueError, ImportError):  # Fallback auf die ältere Variante
 from gi.repository import GLib, Gtk  # noqa: E402
 
 from . import shortcuts
-from .models import LaunchSource, WorkflowType
+from .models import HotkeyMode, LaunchSource, WorkflowType
+from .services import global_hotkeys
 from .state import AppState, MenuBarStatus, StatusKind
 from .ui.popover import PopoverWindow
 from .ui.tray_icon import TrayIconRenderer
@@ -224,10 +225,39 @@ class SchnackerApp:
         """Legt Super+1..4 als GNOME-Systemkürzel an (Logik in shortcuts.py)."""
         return shortcuts.install_gnome_shortcuts()
 
+    # MARK: - Push-to-Talk & Esc-Abbruch (roher Tastatur-Listener) -----------
+
+    def start_global_hotkeys(self) -> None:
+        """Strg+Super halten = Push-to-Talk, Esc = laufende Aufnahme verwerfen.
+
+        Läuft über evdev (siehe global_hotkeys.py), weil GNOME-Systemkürzel (die
+        Strg+Alt+1..4 oben) nur "drücken = Befehl" können, kein Halten/Loslassen.
+        Kommt evdev/die Tastatur nicht infrage, läuft die App trotzdem normal
+        weiter — Push-to-Talk/Esc bleiben dann einfach aus."""
+        global_hotkeys.start(
+            on_esc=lambda: GLib.idle_add(self._on_global_esc),
+            on_ptt_start=lambda: GLib.idle_add(self._on_ptt_start),
+            on_ptt_stop=lambda: GLib.idle_add(self._on_ptt_stop),
+        )
+
+    def _on_global_esc(self) -> bool:
+        self.app_state.cancel_recording()
+        return False
+
+    def _on_ptt_start(self) -> bool:
+        if self.app_state.settings.app.hotkey_mode is HotkeyMode.HOLD:
+            self.app_state.start_push_to_talk()
+        return False
+
+    def _on_ptt_stop(self) -> bool:
+        self.app_state.stop_push_to_talk()
+        return False
+
     # MARK: - Lebenszyklus ----------------------------------------------------
 
     def run(self) -> None:
         self.start_socket_server()
+        self.start_global_hotkeys()
         if self.app_state.should_show_onboarding:
             GLib.idle_add(self.show_popover)
         Gtk.main()
