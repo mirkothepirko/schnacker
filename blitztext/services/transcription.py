@@ -17,6 +17,10 @@ REMOTE_MODEL = "whisper-1"
 TRANSCRIPTIONS_URL = "https://api.openai.com/v1/audio/transcriptions"
 TIMEOUT_SECONDS = 60
 
+# Firmeneigene Begriffe, die Whisper ohne Hinweis regelmäßig falsch erkennt.
+# Werden unabhängig von den nutzerdefinierten Eigennamen (Einstellungen) immer mitgeschickt.
+BUILT_IN_TERMS = ["Flötotto"]
+
 
 class TranscriptionError(Exception):
     """Fehler bei der Transkription. Die Nachricht ist bereits deutsch/nutzerlesbar."""
@@ -28,15 +32,17 @@ def transcribe(audio_path: Path, custom_terms: list[str] | None = None,
     if not api_key:
         raise TranscriptionError("OpenAI API Key fehlt. Bitte in den Einstellungen hinterlegen.")
 
-    custom_terms = custom_terms or []
+    # Eingebaute Begriffe zuerst, danach die Eigennamen aus den Einstellungen
+    # (Duplikate entfernen, Reihenfolge bleibt erhalten).
+    terms = list(dict.fromkeys(BUILT_IN_TERMS + (custom_terms or [])))
 
     # Felder des Formulars. `files` enthält die Audiodatei, `data` die Textfelder.
     data: dict[str, str] = {
         "model": REMOTE_MODEL,
         "response_format": "text",
     }
-    if custom_terms:
-        data["prompt"] = "Eigennamen und Begriffe: " + ", ".join(custom_terms)
+    if terms:
+        data["prompt"] = "Eigennamen und Begriffe: " + ", ".join(terms)
     if language and language.strip():
         data["language"] = language.strip()
 
