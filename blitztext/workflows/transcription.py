@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ..models import PhaseState, RECOMMENDED_FAST_MODEL_NAME, TranscriptionBackend, WorkflowType
+from ..models import Phase, PhaseState, RECOMMENDED_FAST_MODEL_NAME, TranscriptionBackend, WorkflowType
 from ..services import transcription as remote
 from .base import Workflow
 
@@ -24,7 +24,7 @@ class TranscriptionWorkflow(Workflow):
 
     def _process(self, audio_path: Path, duration: float, vocabulary_hints: list[str]) -> str:
         is_local = self.backend is TranscriptionBackend.LOCAL
-        self._set_phase(PhaseState.running("Wird lokal transkribiert ..." if is_local
+        self._set_phase(PhaseState(Phase.RUNNING, "Wird lokal transkribiert ..." if is_local
                                            else "Wird transkribiert ..."))
 
         if is_local:

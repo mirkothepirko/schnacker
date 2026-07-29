@@ -7,59 +7,44 @@ verwaltet und liegt NICHT im Klartext in einer Datei oder im Code.
 
 from __future__ import annotations
 
-from enum import Enum
-
 import keyring
 import keyring.errors
 
-# Name, unter dem unsere Einträge im Schlüsselbund gruppiert werden.
+# Name, unter dem unser Eintrag im Schlüsselbund liegt.
 _SERVICE_NAME = "app.blitztext"
-
-
-class KeychainKey(str, Enum):
-    """Welche Geheimnisse wir speichern. Aktuell nur der OpenAI-Key."""
-
-    OPEN_AI_API_KEY = "openai_api_key"
-
+_KEY_NAME = "openai_api_key"
 
 # Kleiner Zwischenspeicher (Cache), damit nicht bei jedem Tastendruck der
 # Schlüsselbund abgefragt wird — wie `invalidateCache()` im Original.
-_cache: dict[str, str | None] = {}
+# Der Wert `False` steht für "noch nicht gelesen" (None ist ein gültiges Ergebnis).
+_cached: str | None | bool = False
 
 
-def load(key: KeychainKey) -> str | None:
-    """Liest einen gespeicherten Wert. Gibt None zurück, wenn nichts da ist."""
-    if key.value in _cache:
-        return _cache[key.value]
+def load() -> str | None:
+    """Liest den gespeicherten API-Key. None, wenn keiner hinterlegt ist."""
+    global _cached
+    if _cached is not False:
+        return _cached  # type: ignore[return-value]
     try:
-        value = keyring.get_password(_SERVICE_NAME, key.value)
+        _cached = keyring.get_password(_SERVICE_NAME, _KEY_NAME)
     except keyring.errors.KeyringError:
-        value = None
-    _cache[key.value] = value
-    return value
+        _cached = None
+    return _cached
 
 
-def save(key: KeychainKey, value: str) -> None:
-    """Speichert einen Wert verschlüsselt. Wirft eine Ausnahme bei Fehler."""
-    keyring.set_password(_SERVICE_NAME, key.value, value)
-    _cache[key.value] = value
-
-
-def delete(key: KeychainKey) -> None:
-    """Löscht einen gespeicherten Wert (z.B. beim Aufräumen)."""
-    try:
-        keyring.delete_password(_SERVICE_NAME, key.value)
-    except keyring.errors.PasswordDeleteError:
-        pass
-    _cache.pop(key.value, None)
+def save(value: str) -> None:
+    """Speichert den API-Key verschlüsselt. Wirft eine Ausnahme bei Fehler."""
+    global _cached
+    keyring.set_password(_SERVICE_NAME, _KEY_NAME, value)
+    _cached = value
 
 
 def invalidate_cache() -> None:
     """Leert den Zwischenspeicher, damit beim nächsten load() neu gelesen wird."""
-    _cache.clear()
+    global _cached
+    _cached = False
 
 
 def is_configured() -> bool:
     """True, wenn ein OpenAI-Key hinterlegt ist (für Online-Workflows nötig)."""
-    value = load(KeychainKey.OPEN_AI_API_KEY)
-    return bool(value)
+    return bool(load())

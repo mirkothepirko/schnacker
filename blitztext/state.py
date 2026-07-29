@@ -13,12 +13,9 @@ from __future__ import annotations
 
 import threading
 from enum import Enum
-from typing import Callable
+from typing import Callable, NamedTuple
 
-import gi
-
-gi.require_version("Gtk", "3.0")
-from gi.repository import GLib  # noqa: E402
+from gi.repository import GLib
 
 from . import models
 from .models import (
@@ -32,10 +29,8 @@ from .services import keychain
 from .services import local_transcription as local
 from .services import paste
 from .services import settings_store
+from .workflows import llm_workflow
 from .workflows.base import Workflow
-from .workflows.dampf_ablassen import DampfAblassenWorkflow
-from .workflows.emoji_text import EmojiTextWorkflow
-from .workflows.text_improvement import TextImprovementWorkflow
 from .workflows.transcription import TranscriptionWorkflow
 
 
@@ -54,17 +49,12 @@ class StatusKind(str, Enum):
     ERROR = "error"
 
 
-class MenuBarStatus:
-    """Status fürs Menüleisten-Symbol (entspricht enum MenuBarStatus)."""
+class MenuBarStatus(NamedTuple):
+    """Status fürs Menüleisten-Symbol (entspricht enum MenuBarStatus).
+    NamedTuple liefert __init__ und Vergleich (==) gratis mit."""
 
-    def __init__(self, kind: StatusKind, workflow_type: WorkflowType | None = None) -> None:
-        self.kind = kind
-        self.workflow_type = workflow_type
-
-    def __eq__(self, other) -> bool:
-        return (isinstance(other, MenuBarStatus)
-                and self.kind == other.kind
-                and self.workflow_type == other.workflow_type)
+    kind: StatusKind
+    workflow_type: WorkflowType | None = None
 
 
 class AppState:
@@ -130,8 +120,6 @@ class AppState:
                 return (f"Lokal: {local.display_name(name)}." if local.is_model_installed(name)
                         else "Lokales Modell fehlt.")
             return "Online: Whisper über OpenAI."
-        if t is WorkflowType.LOCAL_TRANSCRIPTION:
-            return "Nur lokal. Kein Server."
         if self.settings.app.secure_local_mode_enabled:
             return "Im lokalen Modus pausiert."
         return t.subtitle
@@ -139,8 +127,6 @@ class AppState:
     # MARK: - Verfügbarkeit ----------------------------------------------------
 
     def is_workflow_available(self, t: WorkflowType) -> bool:
-        if t is WorkflowType.LOCAL_TRANSCRIPTION:
-            return self.selected_local_model_is_installed
         if t is WorkflowType.TRANSCRIPTION:
             return (self.selected_local_model_is_installed
                     if self.settings.app.secure_local_mode_enabled
@@ -169,20 +155,17 @@ class AppState:
             wf: Workflow = TranscriptionWorkflow(
                 custom_terms=ti.custom_terms, language=self.settings.transcription.language,
                 backend=backend, local_model_name=self.selected_local_model_name)
-        elif t is WorkflowType.LOCAL_TRANSCRIPTION:
-            wf = TranscriptionWorkflow(
-                workflow_type=WorkflowType.LOCAL_TRANSCRIPTION, custom_terms=ti.custom_terms,
-                language=self.settings.transcription.language, backend=TranscriptionBackend.LOCAL,
-                local_model_name=self.selected_local_model_name)
         elif t is WorkflowType.TEXT_IMPROVER:
-            wf = TextImprovementWorkflow(settings=ti, language=self.settings.transcription.language)
+            wf = llm_workflow.text_improvement(
+                settings=ti, language=self.settings.transcription.language)
         elif t is WorkflowType.DAMPF_ABLASSEN:
-            wf = DampfAblassenWorkflow(settings=self.settings.dampf_ablassen,
-                                       custom_terms=ti.custom_terms,
-                                       language=self.settings.transcription.language)
+            wf = llm_workflow.dampf_ablassen(
+                settings=self.settings.dampf_ablassen, custom_terms=ti.custom_terms,
+                language=self.settings.transcription.language)
         else:  # EMOJI_TEXT
-            wf = EmojiTextWorkflow(settings=self.settings.emoji_text, custom_terms=ti.custom_terms,
-                                   language=self.settings.transcription.language)
+            wf = llm_workflow.basel_deutsch(
+                settings=self.settings.emoji_text, custom_terms=ti.custom_terms,
+                language=self.settings.transcription.language)
 
         self._configure_workflow_handlers(wf)
         self.active_workflow = wf

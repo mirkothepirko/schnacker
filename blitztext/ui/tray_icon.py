@@ -40,13 +40,10 @@ class TrayIconRenderer:
         self._dir = DATA_DIR / "icons"
         self._dir.mkdir(parents=True, exist_ok=True)
         self.theme_path = str(self._dir)  # AppIndicator sucht Icons nach Name in diesem Ordner
-        # Pro Status 4 Animations-Frames vorab erzeugen.
-        self._frames: dict[StatusKind, list[str]] = {}
+        # Pro Status 4 Animations-Frames als PNG in den Ordner schreiben.
         for kind in StatusKind:
-            self._frames[kind] = [self._render(kind, frame) for frame in range(4)]
-
-    def frame_path(self, status: MenuBarStatus, frame: int) -> str:
-        return self._frames[status.kind][frame % 4]
+            for frame in range(4):
+                self._render(kind, frame)
 
     def frame_name(self, status: MenuBarStatus, frame: int) -> str:
         """Icon-Name ohne .png-Endung (das erwartet AppIndicator.set_icon_full)."""
@@ -57,7 +54,7 @@ class TrayIconRenderer:
 
     # MARK: - Zeichnen ---------------------------------------------------------
 
-    def _render(self, kind: StatusKind, frame: int) -> str:
+    def _render(self, kind: StatusKind, frame: int) -> None:
         size = _ICON_SIZE
         surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, size, size)
         ctx = cairo.Context(surface)
@@ -66,9 +63,7 @@ class TrayIconRenderer:
         if kind in _BADGE_COLORS:
             self._draw_badge(ctx, size, kind, frame)
 
-        path = self._dir / f"{kind.value}_{frame}.png"
-        surface.write_to_png(str(path))
-        return str(path)
+        surface.write_to_png(str(self._dir / f"{kind.value}_{frame}.png"))
 
     def _draw_stripes(self, ctx: cairo.Context, size: int, kind: StatusKind, frame: int) -> None:
         stripe_h = size * 0.11

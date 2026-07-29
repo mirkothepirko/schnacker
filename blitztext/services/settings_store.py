@@ -5,26 +5,28 @@ Unter Linux gelten andere Standard-Ordner als auf dem Mac:
     Einstellungen:  ~/.config/blitztext/settings.json
     lokale Modelle: ~/.local/share/blitztext/models/
 
-Wir lesen jeden Wert "tolerant" ein: fehlt ein Feld (z.B. nach einem Update),
-nehmen wir den Standardwert — genau wie Swifts `decodeIfPresent ?? default`.
+Statt für jedes Feld eine eigene Lese-/Schreibzeile zu pflegen, laufen wir über
+die Felder der dataclasses (`dataclasses.fields`) und rechnen den Python-Namen in
+den JSON-Namen um: `has_seen_onboarding` <-> `hasSeenOnboarding`. Ein neues Feld
+in models.py wird damit automatisch mitgespeichert.
+
+Gelesen wird "tolerant": fehlt ein Feld (z.B. nach einem Update) oder ist es vom
+falschen Typ, nehmen wir den Standardwert — wie Swifts `decodeIfPresent ?? default`.
 """
 
 from __future__ import annotations
 
 import json
 import os
-from dataclasses import asdict
+from dataclasses import fields
+from enum import Enum
 from pathlib import Path
 
 from ..models import (
     AppSettings,
     DampfAblassenSettings,
-    EmojiDensity,
     EmojiTextSettings,
-    HotkeyMode,
-    RECOMMENDED_FAST_MODEL_NAME,
     TextImprovementSettings,
-    TextTone,
     TranscriptionSettings,
 )
 
@@ -34,8 +36,7 @@ from ..models import (
 
 def _xdg_dir(env_var: str, default: Path) -> Path:
     """Gibt den XDG-Ordner zurück (Linux-Standard für Konfig/Daten)."""
-    value = os.environ.get(env_var)
-    return Path(value) if value else default
+    return Path(os.environ.get(env_var) or default)
 
 
 CONFIG_DIR = _xdg_dir("XDG_CONFIG_HOME", Path.home() / ".config") / "blitztext"
@@ -52,19 +53,66 @@ def ensure_directories() -> None:
 
 # MARK: - Zusammengefasste Einstellungen --------------------------------------
 
+# JSON-Gruppenname -> Attributname im Bundle und zugehörige dataclass.
+# Diese Namen sind der Vertrag mit bereits gespeicherten settings.json-Dateien.
+_GROUPS: dict[str, tuple[str, type]] = {
+    "app": ("app", AppSettings),
+    "transcription": ("transcription", TranscriptionSettings),
+    "textImprovement": ("text_improvement", TextImprovementSettings),
+    "dampfAblassen": ("dampf_ablassen", DampfAblassenSettings),
+    "emojiText": ("emoji_text", EmojiTextSettings),
+}
+
 
 class SettingsBundle:
     """Hält alle Einstellungs-Gruppen zusammen — wie SettingsContainer im Original."""
 
     def __init__(self) -> None:
-        self.app = AppSettings()
-        self.transcription = TranscriptionSettings()
-        self.text_improvement = TextImprovementSettings()
-        self.dampf_ablassen = DampfAblassenSettings()
-        self.emoji_text = EmojiTextSettings()
+        for attr, cls in _GROUPS.values():
+            setattr(self, attr, cls())
+
+
+# MARK: - Namen umrechnen -----------------------------------------------------
+
+
+def _json_key(field_name: str) -> str:
+    """`has_seen_onboarding` -> `hasSeenOnboarding` (Python-Stil -> JSON-Stil)."""
+    kopf, *rest = field_name.split("_")
+    return kopf + "".join(teil.capitalize() for teil in rest)
 
 
 # MARK: - Laden ---------------------------------------------------------------
+
+
+def _coerce(wert, standard):
+    """Bringt einen gelesenen JSON-Wert auf den Typ des Standardwerts.
+
+    Passt er nicht (kaputte Datei, altes Format), gilt der Standardwert.
+    """
+    if isinstance(standard, Enum):
+        try:
+            return type(standard)(wert)
+        except (ValueError, KeyError):
+            return standard
+    if isinstance(standard, bool):
+        return bool(wert)
+    if isinstance(standard, str):
+        return str(wert)
+    if isinstance(standard, list):
+        return [str(x) for x in wert] if isinstance(wert, list) else list(standard)
+    return wert
+
+
+def _load_group(cls: type, daten: dict):
+    """Baut eine Einstellungs-dataclass aus dem JSON-Abschnitt."""
+    standards = cls()
+    werte = {}
+    for f in fields(cls):
+        standard = getattr(standards, f.name)
+        schluessel = _json_key(f.name)
+        werte[f.name] = (_coerce(daten[schluessel], standard)
+                         if schluessel in daten else standard)
+    return cls(**werte)
 
 
 def load() -> SettingsBundle:
@@ -77,104 +125,35 @@ def load() -> SettingsBundle:
     if not isinstance(raw, dict):
         return bundle
 
-    bundle.app = _load_app(raw.get("app") or {})
-    bundle.transcription = _load_transcription(raw.get("transcription") or {})
-    bundle.text_improvement = _load_text_improvement(raw.get("textImprovement") or {})
-    bundle.dampf_ablassen = _load_dampf_ablassen(raw.get("dampfAblassen") or {})
-    bundle.emoji_text = _load_emoji_text(raw.get("emojiText") or {})
+    for gruppe, (attr, cls) in _GROUPS.items():
+        abschnitt = raw.get(gruppe)
+        if isinstance(abschnitt, dict):
+            setattr(bundle, attr, _load_group(cls, abschnitt))
     return bundle
-
-
-def _enum_or_default(enum_cls, value, default):
-    """Wandelt einen gespeicherten Text in einen Enum-Wert; bei Unbekanntem -> Default."""
-    try:
-        return enum_cls(value)
-    except (ValueError, KeyError):
-        return default
-
-
-def _load_app(d: dict) -> AppSettings:
-    return AppSettings(
-        hotkey_mode=_enum_or_default(HotkeyMode, d.get("hotkeyMode"), HotkeyMode.HOLD),
-        has_seen_onboarding=bool(d.get("hasSeenOnboarding", False)),
-        secure_local_mode_enabled=bool(d.get("secureLocalModeEnabled", False)),
-        selected_local_transcription_model_name=str(
-            d.get("selectedLocalTranscriptionModelName", RECOMMENDED_FAST_MODEL_NAME)
-        ),
-        has_auto_selected_fast_local_model=bool(d.get("hasAutoSelectedFastLocalModel", False)),
-    )
-
-
-def _load_transcription(d: dict) -> TranscriptionSettings:
-    return TranscriptionSettings(language=str(d.get("language", "de")))
-
-
-def _load_text_improvement(d: dict) -> TextImprovementSettings:
-    terms = d.get("customTerms", [])
-    return TextImprovementSettings(
-        system_prompt=str(d.get("systemPrompt", "")),
-        custom_terms=[str(t) for t in terms] if isinstance(terms, list) else [],
-        context=str(d.get("context", "")),
-        tone=_enum_or_default(TextTone, d.get("tone"), TextTone.NEUTRAL),
-        custom_name=str(d.get("customName", "")),
-    )
-
-
-def _load_dampf_ablassen(d: dict) -> DampfAblassenSettings:
-    defaults = DampfAblassenSettings()
-    return DampfAblassenSettings(
-        system_prompt=str(d.get("systemPrompt", defaults.system_prompt)),
-        custom_name=str(d.get("customName", "")),
-    )
-
-
-def _load_emoji_text(d: dict) -> EmojiTextSettings:
-    defaults = EmojiTextSettings()
-    return EmojiTextSettings(
-        system_prompt=str(d.get("systemPrompt", defaults.system_prompt)),
-        emoji_density=_enum_or_default(EmojiDensity, d.get("emojiDensity"), EmojiDensity.MITTEL),
-        custom_name=str(d.get("customName", "")),
-    )
 
 
 # MARK: - Speichern -----------------------------------------------------------
 
 
-def _enum_value(v):
-    """Hilfsfunktion: Enum -> sein Text-Wert, alles andere unverändert."""
-    return v.value if hasattr(v, "value") else v
-
-
 def save(bundle: SettingsBundle) -> None:
     """Schreibt alle Einstellungen als JSON. Schlüsselnamen wie im Original (camelCase)."""
     ensure_directories()
-    data = {
-        "app": {
-            "hotkeyMode": bundle.app.hotkey_mode.value,
-            "hasSeenOnboarding": bundle.app.has_seen_onboarding,
-            "secureLocalModeEnabled": bundle.app.secure_local_mode_enabled,
-            "selectedLocalTranscriptionModelName": bundle.app.selected_local_transcription_model_name,
-            "hasAutoSelectedFastLocalModel": bundle.app.has_auto_selected_fast_local_model,
-        },
-        "transcription": {"language": bundle.transcription.language},
-        "textImprovement": {
-            "systemPrompt": bundle.text_improvement.system_prompt,
-            "customTerms": list(bundle.text_improvement.custom_terms),
-            "context": bundle.text_improvement.context,
-            "tone": bundle.text_improvement.tone.value,
-            "customName": bundle.text_improvement.custom_name,
-        },
-        "dampfAblassen": {
-            "systemPrompt": bundle.dampf_ablassen.system_prompt,
-            "customName": bundle.dampf_ablassen.custom_name,
-        },
-        "emojiText": {
-            "systemPrompt": bundle.emoji_text.system_prompt,
-            "emojiDensity": bundle.emoji_text.emoji_density.value,
-            "customName": bundle.emoji_text.custom_name,
-        },
-    }
+    data = {}
+    for gruppe, (attr, cls) in _GROUPS.items():
+        einstellungen = getattr(bundle, attr)
+        data[gruppe] = {
+            _json_key(f.name): _json_value(getattr(einstellungen, f.name))
+            for f in fields(cls)
+        }
+
     # Erst in eine temporäre Datei schreiben, dann umbenennen -> kein halb-geschriebener Stand.
     tmp = SETTINGS_PATH.with_suffix(".json.tmp")
     tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
     tmp.replace(SETTINGS_PATH)
+
+
+def _json_value(wert):
+    """Enum -> sein Textwert, Liste -> Kopie, alles andere unverändert."""
+    if isinstance(wert, Enum):
+        return wert.value
+    return list(wert) if isinstance(wert, list) else wert

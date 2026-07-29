@@ -23,15 +23,6 @@ import subprocess
 import time
 
 
-class PasteResult:
-    """Ergebnis eines Einfüge-Versuchs."""
-
-    def __init__(self, copied: bool, pasted: bool, error: str | None = None) -> None:
-        self.copied = copied    # liegt der Text in der Zwischenablage?
-        self.pasted = pasted    # wurde automatisch eingefügt?
-        self.error = error
-
-
 def copy_to_clipboard(text: str) -> bool:
     """Legt Text in die Wayland-Zwischenablage. Gibt True bei Erfolg zurück."""
     if not shutil.which("wl-copy"):
@@ -48,35 +39,34 @@ def is_auto_paste_available() -> bool:
     return shutil.which("ydotool") is not None
 
 
-def _simulate_ctrl_v() -> tuple[bool, str | None]:
-    """Drückt Strg+V via ydotool. Rückgabe: (erfolgreich, Fehlertext)."""
+def _simulate_ctrl_v() -> bool:
+    """Drückt Strg+V via ydotool. True, wenn es geklappt hat.
+
+    Scheitert es (nicht installiert / keine Rechte auf /dev/uinput), ist das kein
+    Drama: der Text liegt in der Zwischenablage, der Nutzer drückt selbst Strg+V.
+    """
     if not shutil.which("ydotool"):
-        return False, "ydotool ist nicht installiert."
+        return False
 
     # ydotool 0.1.8-Syntax: Tastennamen mit '+'. 'ctrl+v' drückt die Tasten
     # zusammen und lässt sie wieder los. (Die 1.x-Keycode-Syntax versteht 0.1.8 nicht.)
-    cmd = ["ydotool", "key", "ctrl+v"]
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
-    except (subprocess.SubprocessError, OSError) as exc:
-        return False, f"ydotool-Fehler: {exc}"
-
-    if result.returncode != 0:
-        detail = result.stderr.strip() or "unbekannter Fehler"
-        # Häufigster Fall: keine Rechte auf /dev/uinput (Gruppe 'input' fehlt).
-        return False, f"Auto-Einfügen nicht möglich ({detail})."
-    return True, None
+        result = subprocess.run(["ydotool", "key", "ctrl+v"],
+                                capture_output=True, text=True, timeout=5)
+    except (subprocess.SubprocessError, OSError):
+        return False
+    return result.returncode == 0
 
 
-def paste_at_cursor(text: str) -> PasteResult:
+def paste_at_cursor(text: str) -> bool:
     """Kopiert den Text und versucht, ihn per Strg+V automatisch einzufügen.
+    True, wenn das automatische Einfügen geklappt hat.
 
     Der Text bleibt absichtlich in der Zwischenablage — als Fallback, falls das
     automatische Einfügen blockiert ist (genau wie im Original)."""
-    copied = copy_to_clipboard(text)
+    copy_to_clipboard(text)
 
     # Kurze Pause, damit das Zielfenster den Fokus sicher hat, bevor wir tippen.
     time.sleep(0.12)
 
-    pasted, error = _simulate_ctrl_v()
-    return PasteResult(copied=copied, pasted=pasted, error=error)
+    return _simulate_ctrl_v()

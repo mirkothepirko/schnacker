@@ -16,26 +16,22 @@ import threading
 from pathlib import Path
 from typing import Callable
 
+from ..models import RECOMMENDED_FAST_MODEL_NAME
 from .settings_store import MODELS_DIR
 
-RECOMMENDED_FAST_MODEL_NAME = "small"
-
-# Modell-Steckbriefe: interner Name -> (HF-Repo, Anzeigename, Kurzname).
+# Modell-Steckbriefe: interner Name -> (HF-Repo, Anzeigename).
 _MODELS: dict[str, dict[str, str]] = {
     "small": {
         "repo": "Systran/faster-whisper-small",
         "display": "Whisper Small",
-        "short": "Whisper Small",
     },
     "large-v3": {
         "repo": "Systran/faster-whisper-large-v3",
         "display": "Whisper Large v3",
-        "short": "Whisper Large",
     },
     "large-v3-turbo": {
         "repo": "deepdml/faster-whisper-large-v3-turbo-ct2",
         "display": "Whisper Large v3 Turbo",
-        "short": "Whisper Turbo",
     },
 }
 
@@ -59,16 +55,8 @@ def display_name(name: str) -> str:
     return _MODELS.get(normalized_model_name(name), {}).get("display", name)
 
 
-def short_display_name(name: str) -> str:
-    return _MODELS.get(normalized_model_name(name), {}).get("short", name)
-
-
 def _repo(name: str) -> str:
     return _MODELS[normalized_model_name(name)]["repo"]
-
-
-def model_page_url(name: str) -> str:
-    return f"https://huggingface.co/{_repo(name)}"
 
 
 # MARK: - Installations-Status ------------------------------------------------
@@ -136,11 +124,6 @@ def _get_model(name: str):
         _loaded_model = model
         _loaded_model_name = name
         return model
-
-
-def prepare(name: str) -> None:
-    """Lädt das Modell vorab in den Speicher (für schnelleren ersten Einsatz)."""
-    _get_model(name)
 
 
 def download_and_install(name: str, status_handler: Callable[[str], None] | None = None) -> None:

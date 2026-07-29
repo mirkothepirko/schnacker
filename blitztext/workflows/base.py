@@ -35,7 +35,7 @@ class Workflow:
         self.language = language
         self.custom_terms = custom_terms or []
 
-        self._phase = PhaseState.idle()
+        self._phase = PhaseState()
         self.on_output: Callable[[str], None] | None = None
         self.on_phase_change: Callable[[PhaseState], None] | None = None
 
@@ -66,36 +66,36 @@ class Workflow:
 
     def start(self) -> None:
         self._cancelled = False
-        self._set_phase(PhaseState.running("Aufnahme läuft ..."))
+        self._set_phase(PhaseState(Phase.RUNNING, "Aufnahme läuft ..."))
         self._recorder.start_recording()
         if self._recorder.error_message:
-            self._set_phase(PhaseState.error(self._recorder.error_message))
+            self._set_phase(PhaseState(Phase.ERROR, self._recorder.error_message))
 
     def stop(self) -> None:
         if self._recorder.is_recording:
             self._recorder.stop_recording()
-            if quality.should_reject_recording(self._recorder.last_recording_duration):
+            if self._recorder.last_recording_duration < quality.MINIMUM_RECORDING_DURATION:
                 self._recorder.discard_recording()
-                self._set_phase(PhaseState.error("Keine Aufnahme erkannt."))
+                self._set_phase(PhaseState(Phase.ERROR, "Keine Aufnahme erkannt."))
                 return
             self._begin_processing()
         else:
             self._cancelled = True
-            self._set_phase(PhaseState.idle())
+            self._set_phase(PhaseState())
 
     def reset(self) -> None:
         self._cancelled = True
         if self._recorder.is_recording:
             self._recorder.stop_recording()
         self._recorder.discard_recording()
-        self._set_phase(PhaseState.idle())
+        self._set_phase(PhaseState())
 
     # MARK: - Verarbeitung im Hintergrund-Thread ------------------------------
 
     def _begin_processing(self) -> None:
         audio_path = self._recorder.recording_path
         if audio_path is None:
-            self._set_phase(PhaseState.error("Keine Aufnahme vorhanden."))
+            self._set_phase(PhaseState(Phase.ERROR, "Keine Aufnahme vorhanden."))
             return
 
         duration = self._recorder.last_recording_duration
@@ -113,14 +113,14 @@ class Workflow:
         try:
             result = self._process(audio_path, duration, vocabulary_hints)
             self._check_cancelled()
-            cleaned = quality.cleaned_transcript(result)
-            self._set_phase(PhaseState.done(cleaned))
+            cleaned = result.strip()
+            self._set_phase(PhaseState(Phase.DONE, cleaned))
             if self.on_output:
                 self.on_output(cleaned)
         except WorkflowCancelled:
             pass  # Abbruch ist kein Fehler.
         except Exception as exc:  # noqa: BLE001 — jede Panne als Fehler-Phase melden
-            self._set_phase(PhaseState.error(str(exc)))
+            self._set_phase(PhaseState(Phase.ERROR, str(exc)))
         finally:
             audio_path.unlink(missing_ok=True)
 
@@ -137,7 +137,7 @@ class Workflow:
 
     # Hilfsfunktion: prüft auf das "Keine Aufnahme erkannt."-Artefakt nach Whisper.
     def _reject_if_artifact(self, text: str, duration: float) -> str:
-        cleaned = quality.cleaned_transcript(text)
+        cleaned = text.strip()
         if quality.is_likely_artifact(cleaned, duration):
             raise RuntimeError("Keine Aufnahme erkannt.")
         return cleaned

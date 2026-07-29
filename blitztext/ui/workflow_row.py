@@ -19,7 +19,6 @@ from .. import shortcuts
 # Emoji als Symbol — überall verfügbar, ausdrucksstark, keine fehlenden Icons.
 _WORKFLOW_EMOJI: dict[WorkflowType, str] = {
     WorkflowType.TRANSCRIPTION: "🎙️",
-    WorkflowType.LOCAL_TRANSCRIPTION: "🔒",
     WorkflowType.TEXT_IMPROVER: "✨",
     WorkflowType.DAMPF_ABLASSEN: "🌾",
     WorkflowType.EMOJI_TEXT: "🇨🇭",

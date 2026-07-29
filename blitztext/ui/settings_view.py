@@ -17,7 +17,7 @@ gi.require_version("Gtk", "3.0")
 from gi.repository import GLib, Gtk  # noqa: E402
 
 from .. import shortcuts
-from ..models import HotkeyMode, TextTone, WorkflowType
+from ..models import TextTone, WorkflowType
 from ..services import keychain
 from ..services import local_transcription as local
 from ..services import paste
@@ -145,31 +145,13 @@ class SettingsView(Gtk.Box):
             row.pack_start(Gtk.Label(label=self.app_state.display_name(t), xalign=0), True, True, 0)
             s.pack_start(row, False, False, 0)
 
-        # Modus (Halten/Drücken). Hinweis: unter Wayland verhält sich "Halten" wie "Drücken".
-        mode_label = Gtk.Label(label="Modus", xalign=0)
-        mode_label.get_style_context().add_class("hint-text")
-        s.pack_start(mode_label, False, False, 0)
-
-        self._mode_combo = Gtk.ComboBoxText()
-        for mode in HotkeyMode:
-            self._mode_combo.append(mode.value, mode.display_name)
-        self._mode_combo.set_active_id(self.app_state.settings.app.hotkey_mode.value)
-        self._mode_combo.connect("changed", self._on_mode_changed)
-        s.pack_start(self._mode_combo, False, False, 0)
-
         note = Gtk.Label(
-            label="Hinweis: Unter Wayland startet/stoppt das Kürzel die Aufnahme (Drücken-Modus).",
+            label="Hinweis: Unter Wayland startet/stoppt das Kürzel die Aufnahme.",
             xalign=0)
         note.get_style_context().add_class("hint-text")
         note.set_line_wrap(True)
         s.pack_start(note, False, False, 0)
         return s
-
-    def _on_mode_changed(self, combo) -> None:
-        mode_id = combo.get_active_id()
-        if mode_id:
-            self.app_state.settings.app.hotkey_mode = HotkeyMode(mode_id)
-            self.app_state.save_settings()
 
     def _text_improver_section(self) -> Gtk.Box:
         s = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
@@ -370,7 +352,7 @@ class SettingsView(Gtk.Box):
             return
         try:
             keychain.invalidate_cache()
-            keychain.save(keychain.KeychainKey.OPEN_AI_API_KEY, key)
+            keychain.save(key)
             self._api_entry.set_text("")
             self._api_entry.set_placeholder_text("Gespeichert — zum Ändern neuen Key eintragen")
             self._key_status.set_text("Gespeichert ✓")

@@ -1,8 +1,8 @@
-"""OpenAI Chat Completions (Text umschreiben) — 1:1 portiert aus LLMService.swift.
+"""OpenAI Chat Completions (Text umschreiben) — portiert aus LLMService.swift.
 
-Drei Aufgaben: Text verbessern (improve), Frust entschärfen (dampf_ablassen),
-Emojis hinzufügen (add_emojis). Modelle, Temperaturen und die System-Prompts
-sind wörtlich aus dem Original übernommen.
+Zwei Aufgaben: Text verbessern (improve) und in Mundart übersetzen
+(dampf_ablassen = Platt, basel_deutsch = Baseldütsch). Modelle, Temperaturen und
+der Lektorats-Prompt sind wörtlich aus dem Original übernommen.
 """
 
 from __future__ import annotations
@@ -10,13 +10,14 @@ from __future__ import annotations
 import requests
 
 from . import keychain
-from ..models import EmojiDensity, EmojiTextSettings, TextImprovementSettings, TextTone
+from . import openai_api
+from ..models import TextImprovementSettings, TextTone
 
 CHAT_COMPLETIONS_URL = "https://api.openai.com/v1/chat/completions"
 TIMEOUT_SECONDS = 45
 
 # Modelle wie im Original (enum RewriteModel).
-MODEL_FAST_EDIT = "gpt-4o-mini"  # Verbessern & Emojis
+MODEL_FAST_EDIT = "gpt-4o-mini"  # Verbessern
 MODEL_RAGE = "gpt-4o"            # Schnacker Platt (kräftiges Modell für Dialekt-Übersetzung)
 
 
@@ -35,10 +36,6 @@ def dampf_ablassen(text: str, system_prompt: str, model: str = MODEL_RAGE) -> st
     return _complete(text, system_prompt, model, temperature=0.4)
 
 
-def add_emojis(text: str, settings: EmojiTextSettings, model: str = MODEL_FAST_EDIT) -> str:
-    return _complete(text, _build_emoji_system_prompt(settings.emoji_density), model, temperature=0.3)
-
-
 def basel_deutsch(text: str, system_prompt: str, model: str = MODEL_RAGE) -> str:
     """Übersetzt Hochdeutsch -> Baseldütsch (Schnacker Basel)."""
     return _complete(text, system_prompt, model, temperature=0.4)
@@ -48,7 +45,7 @@ def basel_deutsch(text: str, system_prompt: str, model: str = MODEL_RAGE) -> str
 
 
 def _complete(text: str, system_prompt: str, model: str, temperature: float) -> str:
-    api_key = keychain.load(keychain.KeychainKey.OPEN_AI_API_KEY)
+    api_key = keychain.load()
     if not api_key:
         raise LLMError("OpenAI API Key fehlt. Bitte in den Einstellungen hinterlegen.")
 
@@ -75,7 +72,7 @@ def _complete(text: str, system_prompt: str, model: str, temperature: float) -> 
         raise LLMError(f"Verbindungsproblem: {exc}") from exc
 
     if response.status_code != 200:
-        raise LLMError(f"Fehler von OpenAI: {_error_message(response)}")
+        raise LLMError(f"Fehler von OpenAI: {openai_api.error_message(response)}")
 
     try:
         content = response.json()["choices"][0]["message"]["content"]
@@ -87,33 +84,7 @@ def _complete(text: str, system_prompt: str, model: str, temperature: float) -> 
     return content.strip()
 
 
-def _error_message(response: requests.Response) -> str:
-    try:
-        payload = response.json()
-        message = payload.get("error", {}).get("message")
-        if message:
-            return str(message)
-    except ValueError:
-        pass
-    return f"Status {response.status_code}"
-
-
 # MARK: - Prompt-Bau (wörtlich aus dem Original) ------------------------------
-
-
-def _build_emoji_system_prompt(density: EmojiDensity) -> str:
-    density_instruction = {
-        EmojiDensity.WENIG: "Setze nur vereinzelt Emojis ein, maximal 1-2 pro Absatz.",
-        EmojiDensity.MITTEL: "Setze regelmaessig passende Emojis ein, etwa alle 1-2 Saetze.",
-        EmojiDensity.VIEL: "Setze grosszuegig Emojis ein, gerne mehrere pro Satz.",
-    }[density]
-
-    return (
-        "Du erhaeltst ein gesprochenes Transkript. Gib den Text moeglichst originalgetreu "
-        f"zurueck, aber fuege passende Emojis ein. {density_instruction} Korrigiere "
-        "offensichtliche Sprach- und Grammatikfehler. Behalte den Stil und die Bedeutung bei. "
-        "Gib NUR den Text mit Emojis zurueck, keine Erklaerungen."
-    )
 
 
 def _build_system_prompt(settings: TextImprovementSettings) -> str:

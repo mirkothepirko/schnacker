@@ -18,60 +18,35 @@ from enum import Enum
 
 
 class WorkflowType(str, Enum):
-    """Die fünf Workflows. (str, Enum) heißt: jeder Wert ist auch ein Text,
+    """Die vier Workflows. (str, Enum) heißt: jeder Wert ist auch ein Text,
     so lässt er sich leicht speichern/übertragen — wie Swifts `String`-RawValue."""
 
     TRANSCRIPTION = "transcription"
-    LOCAL_TRANSCRIPTION = "localTranscription"
     TEXT_IMPROVER = "textImprover"
     DAMPF_ABLASSEN = "dampfAblassen"
     EMOJI_TEXT = "emojiText"
 
     @staticmethod
     def main_menu_cases() -> list["WorkflowType"]:
-        """Im Hauptmenü gezeigte Workflows (ohne den separaten Lokal-Workflow)."""
-        return [t for t in WorkflowType if t is not WorkflowType.LOCAL_TRANSCRIPTION]
+        """Alle Workflows — die Reihenfolge bestimmt Menü und Tastenkürzel."""
+        return list(WorkflowType)
 
     @property
     def display_name(self) -> str:
         return {
             WorkflowType.TRANSCRIPTION: "Schnacker",
-            WorkflowType.LOCAL_TRANSCRIPTION: "Schnacker Lokal",
             WorkflowType.TEXT_IMPROVER: "Schnacker+",
             WorkflowType.DAMPF_ABLASSEN: "Schnacker Platt",
             WorkflowType.EMOJI_TEXT: "Schnacker Basel",
         }[self]
 
     @property
-    def icon(self) -> str:
-        """Symbolname. Im Original SF-Symbols; hier merken wir uns einen
-        sprechenden Namen, das UI bildet ihn auf ein GTK-Symbol ab."""
-        return {
-            WorkflowType.TRANSCRIPTION: "mic",
-            WorkflowType.LOCAL_TRANSCRIPTION: "lock",
-            WorkflowType.TEXT_IMPROVER: "text-check",
-            WorkflowType.DAMPF_ABLASSEN: "translate",
-            WorkflowType.EMOJI_TEXT: "translate",
-        }[self]
-
-    @property
     def subtitle(self) -> str:
         return {
             WorkflowType.TRANSCRIPTION: "Sprache rein. Text raus.",
-            WorkflowType.LOCAL_TRANSCRIPTION: "Nur lokal. Kein Server.",
             WorkflowType.TEXT_IMPROVER: "Geschrieben sprechen.",
             WorkflowType.DAMPF_ABLASSEN: "Hochdeutsch rein. Platt raus.",
             WorkflowType.EMOJI_TEXT: "Hochdeutsch rein. Baseldütsch raus.",
-        }[self]
-
-    @property
-    def accent_color(self) -> str:
-        return {
-            WorkflowType.TRANSCRIPTION: "blue",
-            WorkflowType.LOCAL_TRANSCRIPTION: "green",
-            WorkflowType.TEXT_IMPROVER: "purple",
-            WorkflowType.DAMPF_ABLASSEN: "orange",
-            WorkflowType.EMOJI_TEXT: "cyan",
         }[self]
 
 
@@ -100,22 +75,6 @@ class PhaseState:
     def is_active(self) -> bool:
         return self.phase is not Phase.IDLE
 
-    @staticmethod
-    def idle() -> "PhaseState":
-        return PhaseState(Phase.IDLE, "")
-
-    @staticmethod
-    def running(message: str) -> "PhaseState":
-        return PhaseState(Phase.RUNNING, message)
-
-    @staticmethod
-    def done(result: str) -> "PhaseState":
-        return PhaseState(Phase.DONE, result)
-
-    @staticmethod
-    def error(message: str) -> "PhaseState":
-        return PhaseState(Phase.ERROR, message)
-
 
 class LaunchSource(str, Enum):
     """Wie wurde der Workflow gestartet? Wichtig fürs Auto-Einfügen:
@@ -132,25 +91,6 @@ class LaunchSource(str, Enum):
 class TranscriptionBackend(str, Enum):
     REMOTE = "remote"  # OpenAI Whisper
     LOCAL = "local"    # faster-whisper auf diesem Rechner
-
-
-# MARK: - Tastenkürzel-Modus --------------------------------------------------
-
-
-class HotkeyMode(str, Enum):
-    HOLD = "hold"      # Original: halten = aufnehmen. Unter Wayland wie TOGGLE (Hinweis im UI).
-    TOGGLE = "toggle"  # 1x drücken = starten, nochmal/Escape = stoppen
-
-    @property
-    def display_name(self) -> str:
-        return {HotkeyMode.HOLD: "Halten", HotkeyMode.TOGGLE: "Drücken"}[self]
-
-    @property
-    def description(self) -> str:
-        return {
-            HotkeyMode.HOLD: "Tasten halten zum Aufnehmen, loslassen zum Stoppen",
-            HotkeyMode.TOGGLE: "Einmal drücken zum Starten, nochmal oder Escape zum Stoppen",
-        }[self]
 
 
 # MARK: - Einstellungen (Defaults exakt wie im Original) ----------------------
@@ -182,6 +122,10 @@ BASEL_DEFAULT_PROMPT = (
 )
 
 
+# Standard-Modellname für die lokale Transkription (empfohlenes schnelles Modell).
+RECOMMENDED_FAST_MODEL_NAME = "small"
+
+
 class TextTone(str, Enum):
     FORMAL = "formal"
     NEUTRAL = "neutral"
@@ -192,23 +136,8 @@ class TextTone(str, Enum):
         return {TextTone.FORMAL: "Formell", TextTone.NEUTRAL: "Neutral", TextTone.CASUAL: "Locker"}[self]
 
 
-class EmojiDensity(str, Enum):
-    WENIG = "wenig"
-    MITTEL = "mittel"
-    VIEL = "viel"
-
-    @property
-    def display_name(self) -> str:
-        return {EmojiDensity.WENIG: "Wenig", EmojiDensity.MITTEL: "Mittel", EmojiDensity.VIEL: "Viel"}[self]
-
-
-# Standard-Modellname für die lokale Transkription (empfohlenes schnelles Modell).
-RECOMMENDED_FAST_MODEL_NAME = "small"
-
-
 @dataclass
 class AppSettings:
-    hotkey_mode: HotkeyMode = HotkeyMode.HOLD
     has_seen_onboarding: bool = False
     secure_local_mode_enabled: bool = False
     selected_local_transcription_model_name: str = RECOMMENDED_FAST_MODEL_NAME
@@ -229,7 +158,6 @@ class DampfAblassenSettings:
 @dataclass
 class EmojiTextSettings:
     system_prompt: str = BASEL_DEFAULT_PROMPT
-    emoji_density: EmojiDensity = EmojiDensity.MITTEL  # nicht mehr genutzt (war: Emoji-Workflow)
     custom_name: str = ""
 
 
