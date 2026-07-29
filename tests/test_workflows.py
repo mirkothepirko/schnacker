@@ -21,10 +21,7 @@ from blitztext.models import (
     TranscriptionBackend,
     WorkflowType,
 )
-from blitztext.workflows import base
-from blitztext.workflows.dampf_ablassen import DampfAblassenWorkflow
-from blitztext.workflows.emoji_text import EmojiTextWorkflow
-from blitztext.workflows.text_improvement import TextImprovementWorkflow
+from blitztext.workflows import base, llm_workflow
 from blitztext.workflows.transcription import TranscriptionWorkflow
 
 
@@ -214,7 +211,7 @@ class LLMWorkflowsTest(WorkflowTestBase):
     """Die drei Workflows mit zweitem Schritt (Verbessern / Platt / Basel)."""
 
     def test_verbessern_transkribiert_dann_lektoriert(self) -> None:
-        wf = self.baue(TextImprovementWorkflow(settings=TextImprovementSettings()))
+        wf = self.baue(llm_workflow.text_improvement(settings=TextImprovementSettings()))
         with mock.patch("blitztext.services.transcription.transcribe", return_value="roh text"), \
              mock.patch("blitztext.services.llm.improve", return_value="Roher Text.") as verbessern:
             self.durchlaufen(wf)
@@ -224,11 +221,11 @@ class LLMWorkflowsTest(WorkflowTestBase):
 
     def test_verbessern_uebernimmt_eigennamen_aus_den_einstellungen(self) -> None:
         s = TextImprovementSettings(custom_terms=["Flötotto"])
-        wf = self.baue(TextImprovementWorkflow(settings=s))
+        wf = self.baue(llm_workflow.text_improvement(settings=s))
         self.assertEqual(wf.custom_terms, ["Flötotto"])
 
     def test_platt_transkribiert_dann_uebersetzt(self) -> None:
-        wf = self.baue(DampfAblassenWorkflow(settings=DampfAblassenSettings()))
+        wf = self.baue(llm_workflow.dampf_ablassen(settings=DampfAblassenSettings()))
         with mock.patch("blitztext.services.transcription.transcribe", return_value="Guten Tag"), \
              mock.patch("blitztext.services.llm.dampf_ablassen", return_value="Moin") as platt:
             self.durchlaufen(wf)
@@ -238,7 +235,7 @@ class LLMWorkflowsTest(WorkflowTestBase):
         self.assertIn("Wird ins Platt übersetzt ...", [t for _p, t in self.phasen])
 
     def test_basel_transkribiert_dann_uebersetzt(self) -> None:
-        wf = self.baue(EmojiTextWorkflow(settings=EmojiTextSettings()))
+        wf = self.baue(llm_workflow.basel_deutsch(settings=EmojiTextSettings()))
         with mock.patch("blitztext.services.transcription.transcribe", return_value="Guten Tag"), \
              mock.patch("blitztext.services.llm.basel_deutsch", return_value="Grüezi") as basel:
             self.durchlaufen(wf)
@@ -249,7 +246,7 @@ class LLMWorkflowsTest(WorkflowTestBase):
 
     def test_platt_meldet_das_keine_aufnahme_signal_des_modells(self) -> None:
         """Antwortet das Modell mit dem Signalwort, ist es keine echte Ausgabe."""
-        wf = self.baue(DampfAblassenWorkflow(settings=DampfAblassenSettings()))
+        wf = self.baue(llm_workflow.dampf_ablassen(settings=DampfAblassenSettings()))
         with mock.patch("blitztext.services.transcription.transcribe", return_value="Guten Tag"), \
              mock.patch("blitztext.services.llm.dampf_ablassen",
                         return_value="KEINE_AUFNAHME_ERKANNT"):
@@ -258,15 +255,29 @@ class LLMWorkflowsTest(WorkflowTestBase):
         self.assertEqual(self.ausgaben, [])
 
     def test_basel_meldet_das_keine_aufnahme_signal_des_modells(self) -> None:
-        wf = self.baue(EmojiTextWorkflow(settings=EmojiTextSettings()))
+        wf = self.baue(llm_workflow.basel_deutsch(settings=EmojiTextSettings()))
         with mock.patch("blitztext.services.transcription.transcribe", return_value="Guten Tag"), \
              mock.patch("blitztext.services.llm.basel_deutsch",
                         return_value="  KEINE_AUFNAHME_ERKANNT  "):
             self.durchlaufen(wf)
         self.assertEqual(self.letzte_phase, (Phase.ERROR, "Keine Aufnahme erkannt."))
 
+    def test_verbessern_meldet_das_keine_aufnahme_signal_ebenfalls(self) -> None:
+        """Neu und bewusst: vorher prüften nur Platt/Basel dieses Signalwort.
+
+        Ohne die Prüfung würde bei Schnacker+ im Fehlerfall wörtlich
+        "KEINE_AUFNAHME_ERKANNT" in den Text eingefügt.
+        """
+        wf = self.baue(llm_workflow.text_improvement(settings=TextImprovementSettings()))
+        with mock.patch("blitztext.services.transcription.transcribe", return_value="Guten Tag"), \
+             mock.patch("blitztext.services.llm.improve",
+                        return_value="KEINE_AUFNAHME_ERKANNT"):
+            self.durchlaufen(wf)
+        self.assertEqual(self.letzte_phase, (Phase.ERROR, "Keine Aufnahme erkannt."))
+        self.assertEqual(self.ausgaben, [])
+
     def test_llm_workflows_ueberspringen_das_llm_bei_artefakt(self) -> None:
-        wf = self.baue(DampfAblassenWorkflow(settings=DampfAblassenSettings()), dauer=0.4)
+        wf = self.baue(llm_workflow.dampf_ablassen(settings=DampfAblassenSettings()), dauer=0.4)
         with mock.patch("blitztext.services.transcription.transcribe",
                         return_value="Vielen Dank fuers Zuschauen und bis zum naechsten Mal"), \
              mock.patch("blitztext.services.llm.dampf_ablassen") as platt:
@@ -277,11 +288,11 @@ class LLMWorkflowsTest(WorkflowTestBase):
     def test_jeder_workflow_kennt_seinen_typ(self) -> None:
         faelle = [
             (TranscriptionWorkflow(), WorkflowType.TRANSCRIPTION),
-            (TextImprovementWorkflow(settings=TextImprovementSettings()),
+            (llm_workflow.text_improvement(settings=TextImprovementSettings()),
              WorkflowType.TEXT_IMPROVER),
-            (DampfAblassenWorkflow(settings=DampfAblassenSettings()),
+            (llm_workflow.dampf_ablassen(settings=DampfAblassenSettings()),
              WorkflowType.DAMPF_ABLASSEN),
-            (EmojiTextWorkflow(settings=EmojiTextSettings()), WorkflowType.EMOJI_TEXT),
+            (llm_workflow.basel_deutsch(settings=EmojiTextSettings()), WorkflowType.EMOJI_TEXT),
         ]
         for wf, erwartet in faelle:
             with self.subTest(workflow=type(wf).__name__):

@@ -29,10 +29,8 @@ from .services import keychain
 from .services import local_transcription as local
 from .services import paste
 from .services import settings_store
+from .workflows import llm_workflow
 from .workflows.base import Workflow
-from .workflows.dampf_ablassen import DampfAblassenWorkflow
-from .workflows.emoji_text import EmojiTextWorkflow
-from .workflows.text_improvement import TextImprovementWorkflow
 from .workflows.transcription import TranscriptionWorkflow
 
 
@@ -158,14 +156,16 @@ class AppState:
                 custom_terms=ti.custom_terms, language=self.settings.transcription.language,
                 backend=backend, local_model_name=self.selected_local_model_name)
         elif t is WorkflowType.TEXT_IMPROVER:
-            wf = TextImprovementWorkflow(settings=ti, language=self.settings.transcription.language)
+            wf = llm_workflow.text_improvement(
+                settings=ti, language=self.settings.transcription.language)
         elif t is WorkflowType.DAMPF_ABLASSEN:
-            wf = DampfAblassenWorkflow(settings=self.settings.dampf_ablassen,
-                                       custom_terms=ti.custom_terms,
-                                       language=self.settings.transcription.language)
+            wf = llm_workflow.dampf_ablassen(
+                settings=self.settings.dampf_ablassen, custom_terms=ti.custom_terms,
+                language=self.settings.transcription.language)
         else:  # EMOJI_TEXT
-            wf = EmojiTextWorkflow(settings=self.settings.emoji_text, custom_terms=ti.custom_terms,
-                                   language=self.settings.transcription.language)
+            wf = llm_workflow.basel_deutsch(
+                settings=self.settings.emoji_text, custom_terms=ti.custom_terms,
+                language=self.settings.transcription.language)
 
         self._configure_workflow_handlers(wf)
         self.active_workflow = wf

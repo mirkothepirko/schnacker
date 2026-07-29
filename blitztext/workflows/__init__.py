@@ -1,1 +1,1 @@
-"""Die vier Workflows (Diktat, Verbessern, Frust, Emoji) + gemeinsame Basis."""
+"""Die vier Workflows: Diktat (transcription) + die drei mit LLM-Schritt."""
