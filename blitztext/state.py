@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import threading
 from enum import Enum
-from typing import Callable
+from typing import Callable, NamedTuple
 
 from gi.repository import GLib
 
@@ -51,17 +51,12 @@ class StatusKind(str, Enum):
     ERROR = "error"
 
 
-class MenuBarStatus:
-    """Status fürs Menüleisten-Symbol (entspricht enum MenuBarStatus)."""
+class MenuBarStatus(NamedTuple):
+    """Status fürs Menüleisten-Symbol (entspricht enum MenuBarStatus).
+    NamedTuple liefert __init__ und Vergleich (==) gratis mit."""
 
-    def __init__(self, kind: StatusKind, workflow_type: WorkflowType | None = None) -> None:
-        self.kind = kind
-        self.workflow_type = workflow_type
-
-    def __eq__(self, other) -> bool:
-        return (isinstance(other, MenuBarStatus)
-                and self.kind == other.kind
-                and self.workflow_type == other.workflow_type)
+    kind: StatusKind
+    workflow_type: WorkflowType | None = None
 
 
 class AppState:

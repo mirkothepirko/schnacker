@@ -352,7 +352,7 @@ class SettingsView(Gtk.Box):
             return
         try:
             keychain.invalidate_cache()
-            keychain.save(keychain.KeychainKey.OPEN_AI_API_KEY, key)
+            keychain.save(key)
             self._api_entry.set_text("")
             self._api_entry.set_placeholder_text("Gespeichert — zum Ändern neuen Key eintragen")
             self._key_status.set_text("Gespeichert ✓")

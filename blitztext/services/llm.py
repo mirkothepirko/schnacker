@@ -10,6 +10,7 @@ from __future__ import annotations
 import requests
 
 from . import keychain
+from . import openai_api
 from ..models import TextImprovementSettings, TextTone
 
 CHAT_COMPLETIONS_URL = "https://api.openai.com/v1/chat/completions"
@@ -44,7 +45,7 @@ def basel_deutsch(text: str, system_prompt: str, model: str = MODEL_RAGE) -> str
 
 
 def _complete(text: str, system_prompt: str, model: str, temperature: float) -> str:
-    api_key = keychain.load(keychain.KeychainKey.OPEN_AI_API_KEY)
+    api_key = keychain.load()
     if not api_key:
         raise LLMError("OpenAI API Key fehlt. Bitte in den Einstellungen hinterlegen.")
 
@@ -71,7 +72,7 @@ def _complete(text: str, system_prompt: str, model: str, temperature: float) -> 
         raise LLMError(f"Verbindungsproblem: {exc}") from exc
 
     if response.status_code != 200:
-        raise LLMError(f"Fehler von OpenAI: {_error_message(response)}")
+        raise LLMError(f"Fehler von OpenAI: {openai_api.error_message(response)}")
 
     try:
         content = response.json()["choices"][0]["message"]["content"]
@@ -81,17 +82,6 @@ def _complete(text: str, system_prompt: str, model: str, temperature: float) -> 
     if not content or not content.strip():
         raise LLMError("Keine Antwort erhalten. Bitte nochmal versuchen.")
     return content.strip()
-
-
-def _error_message(response: requests.Response) -> str:
-    try:
-        payload = response.json()
-        message = payload.get("error", {}).get("message")
-        if message:
-            return str(message)
-    except ValueError:
-        pass
-    return f"Status {response.status_code}"
 
 
 # MARK: - Prompt-Bau (wörtlich aus dem Original) ------------------------------

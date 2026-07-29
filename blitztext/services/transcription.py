@@ -12,6 +12,7 @@ from pathlib import Path
 import requests
 
 from . import keychain
+from . import openai_api
 
 REMOTE_MODEL = "whisper-1"
 TRANSCRIPTIONS_URL = "https://api.openai.com/v1/audio/transcriptions"
@@ -24,7 +25,7 @@ class TranscriptionError(Exception):
 
 def transcribe(audio_path: Path, custom_terms: list[str] | None = None,
                language: str | None = None) -> str:
-    api_key = keychain.load(keychain.KeychainKey.OPEN_AI_API_KEY)
+    api_key = keychain.load()
     if not api_key:
         raise TranscriptionError("OpenAI API Key fehlt. Bitte in den Einstellungen hinterlegen.")
 
@@ -57,21 +58,9 @@ def transcribe(audio_path: Path, custom_terms: list[str] | None = None,
         raise TranscriptionError(f"Netzwerkfehler: {exc}") from exc
 
     if response.status_code != 200:
-        raise TranscriptionError(f"OpenAI-Fehler: {_error_message(response)}")
+        raise TranscriptionError(f"OpenAI-Fehler: {openai_api.error_message(response)}")
 
     text = response.text.strip()
     if not text:
         raise TranscriptionError("OpenAI-Fehler: Transkription fehlgeschlagen")
     return text
-
-
-def _error_message(response: requests.Response) -> str:
-    """Versucht, die Fehlermeldung aus der JSON-Antwort zu lesen; sonst Statuscode."""
-    try:
-        payload = response.json()
-        message = payload.get("error", {}).get("message")
-        if message:
-            return str(message)
-    except ValueError:
-        pass
-    return f"Status {response.status_code}"

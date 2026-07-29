@@ -20,28 +20,28 @@ class KeychainTest(unittest.TestCase):
     def test_speichern_und_lesen(self) -> None:
         with mock.patch.object(keychain.keyring, "set_password") as setzen, \
              mock.patch.object(keychain.keyring, "get_password", return_value="sk-abc"):
-            keychain.save(keychain.KeychainKey.OPEN_AI_API_KEY, "sk-abc")
-            self.assertEqual(keychain.load(keychain.KeychainKey.OPEN_AI_API_KEY), "sk-abc")
+            keychain.save("sk-abc")
+            self.assertEqual(keychain.load(), "sk-abc")
         setzen.assert_called_once()
 
     def test_gelesener_wert_wird_zwischengespeichert(self) -> None:
         """Der Schlüsselbund darf nicht bei jedem Tastendruck befragt werden."""
         with mock.patch.object(keychain.keyring, "get_password", return_value="sk-abc") as holen:
-            keychain.load(keychain.KeychainKey.OPEN_AI_API_KEY)
-            keychain.load(keychain.KeychainKey.OPEN_AI_API_KEY)
+            keychain.load()
+            keychain.load()
         holen.assert_called_once()
 
     def test_cache_leeren_erzwingt_neues_lesen(self) -> None:
         with mock.patch.object(keychain.keyring, "get_password", return_value="sk-abc") as holen:
-            keychain.load(keychain.KeychainKey.OPEN_AI_API_KEY)
+            keychain.load()
             keychain.invalidate_cache()
-            keychain.load(keychain.KeychainKey.OPEN_AI_API_KEY)
+            keychain.load()
         self.assertEqual(holen.call_count, 2)
 
     def test_kaputter_schluesselbund_gibt_none_statt_abzustuerzen(self) -> None:
         with mock.patch.object(keychain.keyring, "get_password",
                                side_effect=keychain.keyring.errors.KeyringError("kein Dienst")):
-            self.assertIsNone(keychain.load(keychain.KeychainKey.OPEN_AI_API_KEY))
+            self.assertIsNone(keychain.load())
 
     def test_is_configured_nur_bei_vorhandenem_key(self) -> None:
         with mock.patch.object(keychain.keyring, "get_password", return_value="sk-abc"):
@@ -88,8 +88,7 @@ class PasteTest(unittest.TestCase):
         aufrufe = [c.args[0] for c in run.call_args_list]
         self.assertIn(["wl-copy", "--", "Text"], aufrufe)
         self.assertIn(["ydotool", "key", "ctrl+v"], aufrufe)
-        self.assertTrue(ergebnis.pasted)
-        self.assertTrue(ergebnis.copied)
+        self.assertTrue(ergebnis)
 
     def test_einfuegen_ohne_ydotool_scheitert_leise(self) -> None:
         """Der Text muss trotzdem in der Zwischenablage landen (Fallback Strg+V per Hand)."""
@@ -101,9 +100,9 @@ class PasteTest(unittest.TestCase):
              mock.patch.object(paste.subprocess, "run") as run:
             run.return_value = mock.Mock(returncode=0, stderr="")
             ergebnis = paste.paste_at_cursor("Text")
+        # Kopiert wurde trotzdem — nur das automatische Einfügen fiel weg.
         self.assertEqual([c.args[0] for c in run.call_args_list], [["wl-copy", "--", "Text"]])
-        self.assertFalse(ergebnis.pasted)
-        self.assertTrue(ergebnis.copied)
+        self.assertFalse(ergebnis)
 
     def test_einfuegen_meldet_fehlende_rechte(self) -> None:
         with mock.patch.object(paste.shutil, "which", return_value="/usr/bin/x"), \
@@ -111,7 +110,7 @@ class PasteTest(unittest.TestCase):
              mock.patch.object(paste.subprocess, "run") as run:
             run.return_value = mock.Mock(returncode=1, stderr="Permission denied")
             ergebnis = paste.paste_at_cursor("Text")
-        self.assertFalse(ergebnis.pasted)
+        self.assertFalse(ergebnis)
 
 
 class LocalModelNamesTest(unittest.TestCase):

@@ -75,22 +75,6 @@ class PhaseState:
     def is_active(self) -> bool:
         return self.phase is not Phase.IDLE
 
-    @staticmethod
-    def idle() -> "PhaseState":
-        return PhaseState(Phase.IDLE, "")
-
-    @staticmethod
-    def running(message: str) -> "PhaseState":
-        return PhaseState(Phase.RUNNING, message)
-
-    @staticmethod
-    def done(result: str) -> "PhaseState":
-        return PhaseState(Phase.DONE, result)
-
-    @staticmethod
-    def error(message: str) -> "PhaseState":
-        return PhaseState(Phase.ERROR, message)
-
 
 class LaunchSource(str, Enum):
     """Wie wurde der Workflow gestartet? Wichtig fürs Auto-Einfügen:

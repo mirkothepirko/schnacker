@@ -13,27 +13,17 @@ import unittest
 from blitztext.services import transcription_quality as quality
 
 
-class RejectRecordingTest(unittest.TestCase):
+class MindestlaengeTest(unittest.TestCase):
+    """Die Grenze selbst wird in test_workflows geprüft (dort wird sie angewandt)."""
 
-    def test_zu_kurze_aufnahme_wird_verworfen(self) -> None:
-        self.assertTrue(quality.should_reject_recording(0.0))
-        self.assertTrue(quality.should_reject_recording(0.29))
-
-    def test_genau_die_mindestlaenge_wird_akzeptiert(self) -> None:
-        self.assertFalse(quality.should_reject_recording(0.3))
-        self.assertFalse(quality.should_reject_recording(5.0))
-
-
-class CleanedTranscriptTest(unittest.TestCase):
-
-    def test_entfernt_leerzeichen_und_zeilenumbrueche(self) -> None:
-        self.assertEqual(quality.cleaned_transcript("  Hallo Welt \n"), "Hallo Welt")
-
-    def test_innere_leerzeichen_bleiben(self) -> None:
-        self.assertEqual(quality.cleaned_transcript(" a  b "), "a  b")
+    def test_mindestlaenge_ist_drei_zehntel_sekunden(self) -> None:
+        self.assertEqual(quality.MINIMUM_RECORDING_DURATION, 0.3)
 
 
 class ArtifactTest(unittest.TestCase):
+
+    def test_umgebende_leerzeichen_werden_ignoriert(self) -> None:
+        self.assertFalse(quality.is_likely_artifact("  Hallo Welt \n", 5.0))
 
     def test_leerer_text_ist_artefakt(self) -> None:
         self.assertTrue(quality.is_likely_artifact("", 5.0))

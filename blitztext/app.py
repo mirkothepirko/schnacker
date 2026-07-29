@@ -45,13 +45,17 @@ def socket_path() -> str:
 # MARK: - Trigger-Client (für `--trigger`) ------------------------------------
 
 
-def send_trigger(workflow_name: str) -> bool:
-    """Schickt einen Workflow-Auslöser an die laufende App. True bei Erfolg."""
+def send_trigger(workflow_name: str = "") -> bool:
+    """Schickt einen Workflow-Auslöser an die laufende App. True bei Erfolg.
+
+    Ohne Namen wird nur die Verbindung geprüft — das ist gleichzeitig der Test
+    "läuft schon eine Instanz?" (siehe is_running)."""
     try:
         client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         client.settimeout(2)
         client.connect(socket_path())
-        client.sendall(workflow_name.encode("utf-8"))
+        if workflow_name:
+            client.sendall(workflow_name.encode("utf-8"))
         client.close()
         return True
     except OSError:
@@ -60,14 +64,7 @@ def send_trigger(workflow_name: str) -> bool:
 
 def is_running() -> bool:
     """True, wenn bereits eine Schnacker-Instanz auf dem Socket lauscht."""
-    try:
-        client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        client.settimeout(1)
-        client.connect(socket_path())
-        client.close()
-        return True
-    except OSError:
-        return False
+    return send_trigger()
 
 
 # MARK: - Haupt-App -----------------------------------------------------------

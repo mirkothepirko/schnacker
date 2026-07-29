@@ -104,6 +104,16 @@ class BaseWorkflowTest(WorkflowTestBase):
         self.assertEqual(self.letzte_phase, (Phase.ERROR, "Keine Aufnahme erkannt."))
         self.assertTrue(wf._recorder.discarded)
 
+    def test_grenze_der_mindestlaenge(self) -> None:
+        """0.29 s wird verworfen, 0.3 s geht durch — hier lauern <=/<-Vertipper."""
+        for dauer, soll_verschickt_werden in [(0.29, False), (0.3, True)]:
+            with self.subTest(dauer=dauer):
+                wf = self.baue(TranscriptionWorkflow(), dauer=dauer)
+                with mock.patch("blitztext.services.transcription.transcribe",
+                                return_value="Hi") as t:
+                    self.durchlaufen(wf)
+                self.assertEqual(t.called, soll_verschickt_werden)
+
     def test_stop_ohne_laufende_aufnahme_geht_auf_idle(self) -> None:
         wf = self.baue(TranscriptionWorkflow())
         wf.stop()
