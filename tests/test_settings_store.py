@@ -17,6 +17,22 @@ from blitztext import models
 from blitztext.services import settings_store
 
 
+class JsonKeyTest(unittest.TestCase):
+    """Die Namensumrechnung ist die empfindlichste Stelle: ein falsch gebildeter
+    Schlüssel würde beim nächsten Start alle Einstellungen auf Standard setzen."""
+
+    def test_snake_case_wird_camel_case(self) -> None:
+        self.assertEqual(settings_store._json_key("has_seen_onboarding"),
+                         "hasSeenOnboarding")
+        self.assertEqual(settings_store._json_key("selected_local_transcription_model_name"),
+                         "selectedLocalTranscriptionModelName")
+        self.assertEqual(settings_store._json_key("system_prompt"), "systemPrompt")
+
+    def test_einzelnes_wort_bleibt_unveraendert(self) -> None:
+        self.assertEqual(settings_store._json_key("language"), "language")
+        self.assertEqual(settings_store._json_key("context"), "context")
+
+
 class SettingsStoreTest(unittest.TestCase):
 
     def setUp(self) -> None:
