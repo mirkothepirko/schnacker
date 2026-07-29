@@ -22,6 +22,25 @@ from .workflow_row import WorkflowRow
 
 _WIDTH = 360
 
+
+def soll_bei_fokusverlust_schliessen(workflow, dropdown_offen: bool) -> bool:
+    """Soll sich das Fenster schließen, weil es den Fokus verloren hat?
+
+    Zwei Gründe sprechen dagegen:
+
+    * `dropdown_offen` — eine Auswahlliste dieses Fensters (Gtk.ComboBoxText)
+      ist aufgeklappt. Sie lebt in einem eigenen Fenster und nimmt den Fokus
+      an sich; für GTK sieht das aus wie ein Klick nach draußen. Faustregel:
+      Fokusverlust an das eigene Programm ist kein Fokusverlust.
+    * ein laufender Workflow — schließen würde die Aufnahme abbrechen.
+    """
+    if dropdown_offen:
+        return False
+    if workflow and workflow.phase.is_active and workflow.phase.phase is Phase.RUNNING:
+        return False
+    return True
+
+
 _CSS = b"""
 .popover-root { background-color: @theme_bg_color; }
 .app-title { font-weight: 600; font-size: 11pt; }
@@ -88,6 +107,7 @@ class PopoverWindow(Gtk.Window):
         self._settings_view: SettingsView | None = None
         self._waveform: WaveformView | None = None
         self._shown_page: Page | None = None
+        self._dropdown_offen = False
 
         self.connect("key-press-event", self._on_key_press)
         # Klick neben das Fenster (Fokus verloren) -> schließen, wie ein echtes Popover.
@@ -104,6 +124,9 @@ class PopoverWindow(Gtk.Window):
 
     def hide_popover(self) -> None:
         self.app_state.is_popover_shown = False
+        # Sicherheitsnetz: ein hängengebliebener Merker würde das Fenster nie
+        # wieder schließen lassen. Beim Öffnen also immer bei Null anfangen.
+        self._dropdown_offen = False
         if self._waveform:
             self._waveform.stop()
         self.hide()
@@ -135,12 +158,18 @@ class PopoverWindow(Gtk.Window):
         return False
 
     def _on_focus_out(self, _w, _e) -> bool:
-        # Nicht schließen, während aufgenommen/verarbeitet wird (sonst bricht es ab).
-        wf = self.app_state.active_workflow
-        if wf and wf.phase.is_active and wf.phase.phase is Phase.RUNNING:
-            return False
-        self.hide_popover()
+        if soll_bei_fokusverlust_schliessen(self.app_state.active_workflow,
+                                            self._dropdown_offen):
+            self.hide_popover()
         return False
+
+    def set_dropdown_offen(self, offen: bool) -> None:
+        """Meldet, dass eine Auswahlliste dieses Fensters auf- oder zuklappt.
+
+        Solange sie offen ist, darf der Fokusverlust das Fenster nicht schließen —
+        sonst verschwindet die Liste mit dem Fenster, bevor man etwas auswählen kann.
+        """
+        self._dropdown_offen = offen
 
     # MARK: - Aufbau ----------------------------------------------------------
 
@@ -152,6 +181,11 @@ class PopoverWindow(Gtk.Window):
         page = self.app_state.page
         if page is Page.SETTINGS and self._shown_page is Page.SETTINGS:
             return  # Einstellungen aktualisieren sich selbst.
+
+        # Nur die Einstellungsseite hat Auswahllisten. Beim Wechsel weg von ihr
+        # kann keine mehr offen sein.
+        if page is not Page.SETTINGS:
+            self._dropdown_offen = False
 
         # Alten Wellenform-Timer stoppen, sonst läuft er auf einem zerstörten Widget weiter.
         if self._waveform is not None:
@@ -367,7 +401,8 @@ class PopoverWindow(Gtk.Window):
         box.pack_start(Gtk.Separator(), False, False, 0)
 
         if self._settings_view is None:
-            self._settings_view = SettingsView(self.app_state, self.on_install_shortcuts)
+            self._settings_view = SettingsView(self.app_state, self.on_install_shortcuts,
+                                               self.set_dropdown_offen)
         box.pack_start(self._settings_view, True, True, 0)
         return box
 
