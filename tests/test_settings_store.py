@@ -105,30 +105,34 @@ class SettingsStoreTest(unittest.TestCase):
 
         self.assertEqual(set(raw), {"app", "transcription", "textImprovement",
                                     "dampfAblassen", "emojiText"})
+        # "hotkeyMode" ist absichtlich weg: die Einstellung hatte keine Wirkung.
         self.assertEqual(set(raw["app"]), {
-            "hotkeyMode", "hasSeenOnboarding", "secureLocalModeEnabled",
+            "hasSeenOnboarding", "secureLocalModeEnabled",
             "selectedLocalTranscriptionModelName", "hasAutoSelectedFastLocalModel",
         })
         self.assertEqual(set(raw["transcription"]), {"language"})
         self.assertEqual(set(raw["textImprovement"]),
                          {"systemPrompt", "customTerms", "context", "tone", "customName"})
         self.assertEqual(set(raw["dampfAblassen"]), {"systemPrompt", "customName"})
-        self.assertEqual(set(raw["emojiText"]),
-                         {"systemPrompt", "emojiDensity", "customName"})
+        # "emojiDensity" ist absichtlich weg: Rest des früheren Emoji-Workflows.
+        self.assertEqual(set(raw["emojiText"]), {"systemPrompt", "customName"})
 
     def test_alte_datei_mit_unbekannten_feldern_wird_gelesen(self) -> None:
         """Vorwärts-/rückwärtskompatibel: Unbekanntes ignorieren, Fehlendes = Standard."""
         self.settings_path.parent.mkdir(parents=True, exist_ok=True)
         self.settings_path.write_text(json.dumps({
+            # hotkeyMode/emojiDensity: Felder aus einer älteren Version, heute entfernt.
             "app": {"hasSeenOnboarding": True, "hotkeyMode": "toggle", "quatsch": 1},
             "transcription": {"language": "fr"},
             "textImprovement": {"tone": "casual"},
+            "emojiText": {"systemPrompt": "Basel", "emojiDensity": "viel"},
         }), encoding="utf-8")
 
         bundle = settings_store.load()
         self.assertTrue(bundle.app.has_seen_onboarding)
         self.assertEqual(bundle.transcription.language, "fr")
         self.assertEqual(bundle.text_improvement.tone, models.TextTone.CASUAL)
+        self.assertEqual(bundle.emoji_text.system_prompt, "Basel")
         # Fehlende Gruppe -> Standardwert
         self.assertEqual(bundle.dampf_ablassen.system_prompt,
                          models.DAMPF_ABLASSEN_DEFAULT_PROMPT)

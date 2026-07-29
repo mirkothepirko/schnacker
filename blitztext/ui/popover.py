@@ -11,10 +11,10 @@ from typing import Callable
 import gi
 
 gi.require_version("Gtk", "3.0")
+gi.require_version("Gdk", "3.0")
 from gi.repository import Gdk, Gtk  # noqa: E402
 
 from ..models import Phase, WorkflowType
-from ..services import local_transcription as local
 from ..state import Page
 from .settings_view import SettingsView
 from .waveform import WaveformView

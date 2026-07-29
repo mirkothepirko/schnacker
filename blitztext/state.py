@@ -15,10 +15,7 @@ import threading
 from enum import Enum
 from typing import Callable
 
-import gi
-
-gi.require_version("Gtk", "3.0")
-from gi.repository import GLib  # noqa: E402
+from gi.repository import GLib
 
 from . import models
 from .models import (
@@ -130,8 +127,6 @@ class AppState:
                 return (f"Lokal: {local.display_name(name)}." if local.is_model_installed(name)
                         else "Lokales Modell fehlt.")
             return "Online: Whisper über OpenAI."
-        if t is WorkflowType.LOCAL_TRANSCRIPTION:
-            return "Nur lokal. Kein Server."
         if self.settings.app.secure_local_mode_enabled:
             return "Im lokalen Modus pausiert."
         return t.subtitle
@@ -139,8 +134,6 @@ class AppState:
     # MARK: - Verfügbarkeit ----------------------------------------------------
 
     def is_workflow_available(self, t: WorkflowType) -> bool:
-        if t is WorkflowType.LOCAL_TRANSCRIPTION:
-            return self.selected_local_model_is_installed
         if t is WorkflowType.TRANSCRIPTION:
             return (self.selected_local_model_is_installed
                     if self.settings.app.secure_local_mode_enabled
@@ -169,11 +162,6 @@ class AppState:
             wf: Workflow = TranscriptionWorkflow(
                 custom_terms=ti.custom_terms, language=self.settings.transcription.language,
                 backend=backend, local_model_name=self.selected_local_model_name)
-        elif t is WorkflowType.LOCAL_TRANSCRIPTION:
-            wf = TranscriptionWorkflow(
-                workflow_type=WorkflowType.LOCAL_TRANSCRIPTION, custom_terms=ti.custom_terms,
-                language=self.settings.transcription.language, backend=TranscriptionBackend.LOCAL,
-                local_model_name=self.selected_local_model_name)
         elif t is WorkflowType.TEXT_IMPROVER:
             wf = TextImprovementWorkflow(settings=ti, language=self.settings.transcription.language)
         elif t is WorkflowType.DAMPF_ABLASSEN:

@@ -13,15 +13,12 @@ from __future__ import annotations
 
 import json
 import os
-from dataclasses import asdict
 from pathlib import Path
 
 from ..models import (
     AppSettings,
     DampfAblassenSettings,
-    EmojiDensity,
     EmojiTextSettings,
-    HotkeyMode,
     RECOMMENDED_FAST_MODEL_NAME,
     TextImprovementSettings,
     TextTone,
@@ -95,7 +92,6 @@ def _enum_or_default(enum_cls, value, default):
 
 def _load_app(d: dict) -> AppSettings:
     return AppSettings(
-        hotkey_mode=_enum_or_default(HotkeyMode, d.get("hotkeyMode"), HotkeyMode.HOLD),
         has_seen_onboarding=bool(d.get("hasSeenOnboarding", False)),
         secure_local_mode_enabled=bool(d.get("secureLocalModeEnabled", False)),
         selected_local_transcription_model_name=str(
@@ -132,7 +128,6 @@ def _load_emoji_text(d: dict) -> EmojiTextSettings:
     defaults = EmojiTextSettings()
     return EmojiTextSettings(
         system_prompt=str(d.get("systemPrompt", defaults.system_prompt)),
-        emoji_density=_enum_or_default(EmojiDensity, d.get("emojiDensity"), EmojiDensity.MITTEL),
         custom_name=str(d.get("customName", "")),
     )
 
@@ -150,7 +145,6 @@ def save(bundle: SettingsBundle) -> None:
     ensure_directories()
     data = {
         "app": {
-            "hotkeyMode": bundle.app.hotkey_mode.value,
             "hasSeenOnboarding": bundle.app.has_seen_onboarding,
             "secureLocalModeEnabled": bundle.app.secure_local_mode_enabled,
             "selectedLocalTranscriptionModelName": bundle.app.selected_local_transcription_model_name,
@@ -170,7 +164,6 @@ def save(bundle: SettingsBundle) -> None:
         },
         "emojiText": {
             "systemPrompt": bundle.emoji_text.system_prompt,
-            "emojiDensity": bundle.emoji_text.emoji_density.value,
             "customName": bundle.emoji_text.custom_name,
         },
     }

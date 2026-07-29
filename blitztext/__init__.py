@@ -10,6 +10,3 @@ Ubuntu/GNOME/Wayland. Aufbau spiegelt das Original (siehe original-reference/):
     workflows/           -> Features/Workflows/
     ui/                  -> Features/MenuBar/ + Views/
 """
-
-__version__ = "0.1.0"
-APP_NAME = "Schnacker"

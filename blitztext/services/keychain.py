@@ -45,15 +45,6 @@ def save(key: KeychainKey, value: str) -> None:
     _cache[key.value] = value
 
 
-def delete(key: KeychainKey) -> None:
-    """Löscht einen gespeicherten Wert (z.B. beim Aufräumen)."""
-    try:
-        keyring.delete_password(_SERVICE_NAME, key.value)
-    except keyring.errors.PasswordDeleteError:
-        pass
-    _cache.pop(key.value, None)
-
-
 def invalidate_cache() -> None:
     """Leert den Zwischenspeicher, damit beim nächsten load() neu gelesen wird."""
     _cache.clear()
