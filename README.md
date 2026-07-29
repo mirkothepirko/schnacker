@@ -131,7 +131,7 @@ Wayland sperrt aus Sicherheitsgründen einige Dinge, die das macOS-Original nutz
 
 - **Tastenkürzel** sind GNOME-Systemkürzel (`Strg+Alt+1`…) im **„Drücken"-Modus**
   (1× drücken = Start, nochmal = Stopp). Das „Halten = aufnehmen" des Originals ist unter
-  Wayland nicht möglich; die Einstellung bleibt sichtbar, verhält sich aber wie „Drücken".
+  Wayland nicht möglich; die wirkungslose Modus-Auswahl wurde daher entfernt.
 - **Auto-Einfügen** funktioniert nur bei Start über ein Tastenkürzel. Beim Start über das
   Fenster geht der Text in die Zwischenablage (Wayland erlaubt kein zuverlässiges
   Zurückspringen ins vorherige Fenster).
@@ -139,6 +139,26 @@ Wayland sperrt aus Sicherheitsgründen einige Dinge, die das macOS-Original nutz
 Die Bedienlogik, die deutschen Texte und die ersten beiden Workflows (Diktat, Schnacker+)
 folgen dem Original. **Schnacker Platt** und **Schnacker Basel** sind eigene Anpassungen und
 ersetzen die Originalfunktionen „$%&!" (Frust entschärfen) und „:)" (Emojis einstreuen).
+
+---
+
+## Tests
+
+Die Test-Suite braucht **keine** zusätzlichen Pakete (nur Pythons eingebautes
+`unittest`) und geht nicht ins Netz — OpenAI, Mikrofon und Schlüsselbund werden
+durch Attrappen ersetzt.
+
+```bash
+python3 -m unittest discover -s tests -t .        # alle Tests
+python3 -m unittest tests.test_workflows -v       # nur ein Bereich, ausführlich
+```
+
+Zusätzlich gibt es einen Rauchtest der Oberfläche, der die echte App startet,
+jede Seite aufbaut und sich selbst beendet (braucht einen Bildschirm):
+
+```bash
+python3 tests/gui_smoke.py
+```
 
 ---
 
