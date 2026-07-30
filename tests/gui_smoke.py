@@ -33,6 +33,43 @@ with mock.patch("blitztext.services.keychain.is_configured", return_value=True):
         print(f"Seite {page.value:12s} aufgebaut, Kinder:",
               len(app.popover._content.get_children()))
 
+    # Auswahllisten: klappt eine auf, darf der Fokusverlust das Fenster NICHT
+    # schließen. Nur mit echtem GTK prüfbar — vorher klappte hier das ganze
+    # Einstellungsfenster zu, sobald man den Schreibstil auswählen wollte.
+    app.app_state.page = Page.SETTINGS
+    app.popover._shown_page = None
+    app.popover.rebuild()
+
+    # Die Liste klappt nur auf einem sichtbaren Fenster auf — also erst zeigen und
+    # GTK die anstehenden Ereignisse abarbeiten lassen. Geöffnet wird über das
+    # Aktions-Signal "popup" (derselbe Weg wie per Tastatur); die GTK-Warnung
+    # "no trigger event for menu popup" ist dabei normal, weil kein echter Klick
+    # dahintersteckt.
+    app.popover.show_all()
+    while Gtk.events_pending():
+        Gtk.main_iteration_do(False)
+
+    for name, combo in (("Schreibstil", app.popover._settings_view._tone_combo),
+                        ("Lokales Modell", app.popover._settings_view._model_combo)):
+        combo.emit("popup")
+        while Gtk.events_pending():
+            Gtk.main_iteration_do(False)
+        offen = app.popover._dropdown_offen
+        # Fokusverlust simulieren, während die Liste offen ist.
+        app.popover._on_focus_out(app.popover, None)
+        noch_da = app.app_state.is_popover_shown
+        combo.emit("popdown")
+        zu = not app.popover._dropdown_offen
+        print(f"Liste {name:15s} Merker gesetzt: {offen}, Fenster bleibt offen: "
+              f"{noch_da}, Merker zurückgesetzt: {zu}")
+        assert offen and noch_da and zu, f"Auswahlliste {name} schließt das Fenster"
+
+    # Gegenprobe: ohne offene Liste muss der Fokusverlust weiterhin schließen.
+    app.popover.app_state.is_popover_shown = True
+    app.popover._on_focus_out(app.popover, None)
+    assert not app.app_state.is_popover_shown, "Fokusverlust schließt das Fenster nicht mehr"
+    print("Gegenprobe: Fokusverlust ohne offene Liste schließt weiterhin")
+
     # Status-Animation durchschalten (rendert Icons + Tooltips)
     from blitztext.state import MenuBarStatus, StatusKind
     for kind in StatusKind:

@@ -30,10 +30,14 @@ def _section_label(text: str) -> Gtk.Label:
 
 
 class SettingsView(Gtk.Box):
-    def __init__(self, app_state, on_install_shortcuts: Callable[[], str]) -> None:
+    def __init__(self, app_state, on_install_shortcuts: Callable[[], str],
+                 on_dropdown_offen: Callable[[bool], None] | None = None) -> None:
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=0)
         self.app_state = app_state
         self.on_install_shortcuts = on_install_shortcuts
+        # Wird gerufen, wenn eine Auswahlliste auf- oder zuklappt. Das Elternfenster
+        # schließt sich bei Fokusverlust — währenddessen darf es das nicht.
+        self.on_dropdown_offen = on_dropdown_offen
 
         notebook = Gtk.Notebook()
         notebook.set_show_border(False)
@@ -47,6 +51,18 @@ class SettingsView(Gtk.Box):
         # Modell-Download-Status regelmäßig auffrischen, solange die Seite offen ist.
         self._poll_id = GLib.timeout_add(500, self._poll_dynamic)
         self.connect("destroy", lambda _w: self._stop_poll())
+
+    def _melde_dropdown(self, combo: Gtk.ComboBox) -> Gtk.ComboBox:
+        """Verbindet eine Auswahlliste mit der Fokus-Ausnahme des Elternfensters.
+
+        `popup-shown` ist eine Eigenschaft von Gtk.ComboBox und wird gesetzt, sobald
+        die Liste aufklappt — also *bevor* das Elternfenster den Fokus verliert.
+        Genau deshalb kommt der Merker rechtzeitig an.
+        """
+        if self.on_dropdown_offen is not None:
+            combo.connect("notify::popup-shown",
+                          lambda c, _p: self.on_dropdown_offen(c.get_property("popup-shown")))
+        return combo
 
     @staticmethod
     def _scroll(child: Gtk.Widget) -> Gtk.ScrolledWindow:
@@ -92,7 +108,7 @@ class SettingsView(Gtk.Box):
         # Modell-Auswahl
         model_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
         model_row.pack_start(Gtk.Label(label="Lokales Modell", xalign=0), False, False, 0)
-        self._model_combo = Gtk.ComboBoxText()
+        self._model_combo = self._melde_dropdown(Gtk.ComboBoxText())
         for name in local.model_options():
             installed = " · Installiert" if local.is_model_installed(name) else " · Nicht installiert"
             self._model_combo.append(name, local.display_name(name) + installed)
@@ -158,7 +174,7 @@ class SettingsView(Gtk.Box):
         s.pack_start(_section_label("Schnacker+"), False, False, 0)
 
         s.pack_start(Gtk.Label(label="Schreibstil", xalign=0), False, False, 0)
-        self._tone_combo = Gtk.ComboBoxText()
+        self._tone_combo = self._melde_dropdown(Gtk.ComboBoxText())
         for tone in TextTone:
             self._tone_combo.append(tone.value, tone.display_name)
         self._tone_combo.set_active_id(self.app_state.settings.text_improvement.tone.value)
