@@ -30,7 +30,8 @@ except (ValueError, ImportError):  # Fallback auf die ältere Variante
 from gi.repository import GLib, Gtk  # noqa: E402
 
 from . import shortcuts
-from .models import LaunchSource, WorkflowType
+from .models import LaunchSource, PushToTalkTarget, WorkflowType
+from .services import global_hotkeys
 from .state import AppState, MenuBarStatus, StatusKind
 from .ui.popover import PopoverWindow
 from .ui.tray_icon import TrayIconRenderer
@@ -221,10 +222,42 @@ class SchnackerApp:
         """Legt Super+1..4 als GNOME-Systemkürzel an (Logik in shortcuts.py)."""
         return shortcuts.install_gnome_shortcuts()
 
+    # MARK: - Push-to-Talk & Esc-Abbruch (roher Tastatur-Listener) -----------
+
+    def start_global_hotkeys(self) -> bool:
+        """Strg+Super halten = aufnehmen, loslassen = einfügen. Esc = verwerfen.
+
+        Braucht einen rohen Tastatur-Listener (evdev), weil GNOME-Systemkürzel — die
+        Strg+Alt+1..4 oben — nur „drücken = Befehl" können und kein Halten/Loslassen
+        kennen. Steht die Einstellung auf „Aus", starten wir ihn gar nicht: dann liest
+        die App keine Tastendrücke mit. Fehlt evdev oder die Rechte, läuft die App
+        normal weiter, nur ohne Push-to-Talk.
+        """
+        if self.app_state.settings.app.push_to_talk_target is PushToTalkTarget.OFF:
+            return False
+        return global_hotkeys.start(
+            on_esc=lambda: GLib.idle_add(self._on_global_esc),
+            on_ptt_start=lambda: GLib.idle_add(self._on_ptt_start),
+            on_ptt_stop=lambda: GLib.idle_add(self._on_ptt_stop),
+        )
+
+    def _on_global_esc(self) -> bool:
+        self.app_state.cancel_recording()
+        return False
+
+    def _on_ptt_start(self) -> bool:
+        self.app_state.start_push_to_talk()
+        return False
+
+    def _on_ptt_stop(self) -> bool:
+        self.app_state.stop_push_to_talk()
+        return False
+
     # MARK: - Lebenszyklus ----------------------------------------------------
 
     def run(self) -> None:
         self.start_socket_server()
+        self.start_global_hotkeys()
         if self.app_state.should_show_onboarding:
             GLib.idle_add(self.show_popover)
         Gtk.main()

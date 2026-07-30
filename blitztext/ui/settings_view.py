@@ -17,7 +17,7 @@ gi.require_version("Gtk", "3.0")
 from gi.repository import GLib, Gtk  # noqa: E402
 
 from .. import shortcuts
-from ..models import TextTone, WorkflowType
+from ..models import PushToTalkTarget, TextTone, WorkflowType
 from ..services import keychain
 from ..services import local_transcription as local
 from ..services import paste
@@ -167,7 +167,35 @@ class SettingsView(Gtk.Box):
         note.get_style_context().add_class("hint-text")
         note.set_line_wrap(True)
         s.pack_start(note, False, False, 0)
+
+        # Push-to-Talk: eigenes Kürzel zum Halten, mit wählbarem Workflow.
+        ptt_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        kbd = Gtk.Label(label="Strg+Super", xalign=0)
+        kbd.get_style_context().add_class("mono")
+        kbd.set_size_request(110, -1)
+        ptt_row.pack_start(kbd, False, False, 0)
+        self._ptt_combo = self._melde_dropdown(Gtk.ComboBoxText())
+        for ziel in PushToTalkTarget:
+            self._ptt_combo.append(ziel.value, ziel.display_name)
+        self._ptt_combo.set_active_id(self.app_state.settings.app.push_to_talk_target.value)
+        self._ptt_combo.connect("changed", lambda c: self._set_ptt_target(c.get_active_id()))
+        ptt_row.pack_start(self._ptt_combo, True, True, 0)
+        s.pack_start(ptt_row, False, False, 0)
+
+        ptt_note = Gtk.Label(
+            label="Strg+Super halten zum Aufnehmen, loslassen zum Einfügen. "
+                  "Esc verwirft eine laufende Aufnahme. „Aus\" schaltet das Mitlesen "
+                  "der Tastatur ab — das wirkt erst nach einem Neustart der App.",
+            xalign=0)
+        ptt_note.get_style_context().add_class("hint-text")
+        ptt_note.set_line_wrap(True)
+        s.pack_start(ptt_note, False, False, 0)
         return s
+
+    def _set_ptt_target(self, ziel_id) -> None:
+        if ziel_id:
+            self.app_state.settings.app.push_to_talk_target = PushToTalkTarget(ziel_id)
+            self.app_state.save_settings()
 
     def _text_improver_section(self) -> Gtk.Box:
         s = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)

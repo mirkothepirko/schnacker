@@ -136,12 +136,45 @@ class TextTone(str, Enum):
         return {TextTone.FORMAL: "Formell", TextTone.NEUTRAL: "Neutral", TextTone.CASUAL: "Locker"}[self]
 
 
+class PushToTalkTarget(str, Enum):
+    """Was Strg+Super (halten) startet.
+
+    Die Werte sind absichtlich identisch mit denen von `WorkflowType` — dadurch ist
+    die Umrechnung in `workflow` eine Zeile ohne Zuordnungstabelle, die man beim
+    Hinzufügen eines Workflows vergessen könnte.
+
+    `OFF` schaltet Push-to-Talk und den Esc-Abbruch ganz ab. Dann wird der rohe
+    Tastatur-Listener gar nicht gestartet — die App liest also keine Tastendrücke
+    mit. Das ist der Grund, warum es diese Option gibt.
+    """
+
+    OFF = "off"
+    TRANSCRIPTION = "transcription"
+    TEXT_IMPROVER = "textImprover"
+    DAMPF_ABLASSEN = "dampfAblassen"
+    EMOJI_TEXT = "emojiText"
+
+    @property
+    def workflow(self) -> "WorkflowType | None":
+        """Der zugehörige Workflow — oder None, wenn Push-to-Talk aus ist."""
+        return None if self is PushToTalkTarget.OFF else WorkflowType(self.value)
+
+    @property
+    def display_name(self) -> str:
+        if self is PushToTalkTarget.OFF:
+            return "Aus"
+        return WorkflowType(self.value).display_name
+
+
 @dataclass
 class AppSettings:
     has_seen_onboarding: bool = False
     secure_local_mode_enabled: bool = False
     selected_local_transcription_model_name: str = RECOMMENDED_FAST_MODEL_NAME
     has_auto_selected_fast_local_model: bool = False
+    # Strg+Super halten = aufnehmen, loslassen = einfügen. Standard ist Diktat, damit
+    # das Kürzel nach dem Update wieder so arbeitet wie vorher.
+    push_to_talk_target: PushToTalkTarget = PushToTalkTarget.TRANSCRIPTION
 
 
 @dataclass

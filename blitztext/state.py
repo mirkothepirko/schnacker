@@ -178,6 +178,37 @@ class AppState:
         if self.active_workflow:
             self.active_workflow.stop()
 
+    # MARK: - Push-to-Talk (Strg+Super halten) & Esc-Abbruch ------------------
+
+    def start_push_to_talk(self) -> None:
+        """Strg+Super gedrückt: startet den in den Einstellungen gewählten Workflow.
+
+        Läuft schon etwas, passiert nichts — sonst würde ein versehentliches
+        Nachgreifen die laufende Aufnahme abschneiden. Steht die Einstellung auf
+        „Aus", ist der Tastatur-Listener gar nicht gestartet; die Abfrage hier ist
+        das zweite Netz, damit ein Umschalten auf „Aus" sofort wirkt.
+        """
+        ziel = self.settings.app.push_to_talk_target.workflow
+        if ziel is None:
+            return
+        if self.active_workflow and self.active_workflow.phase.is_active:
+            return
+        self.start_workflow(ziel, LaunchSource.HOTKEY_BACKGROUND)
+
+    def stop_push_to_talk(self) -> None:
+        """Strg+Super losgelassen: Aufnahme beenden -> verarbeiten -> automatisch einfügen."""
+        if self.active_workflow and self.active_workflow.is_recording:
+            self.stop_current_workflow()
+
+    def cancel_recording(self) -> None:
+        """Esc: laufende Aufnahme verwerfen, OHNE sie zu verarbeiten oder einzufügen.
+
+        Wirkt nur während der Aufnahme — läuft schon der API-Aufruf, gibt es nichts
+        mehr zu verwerfen, und ein Abbruch dort würde nur den Zustand verwirren.
+        """
+        if self.active_workflow and self.active_workflow.is_recording:
+            self.reset_current_workflow()
+
     def reset_current_workflow(self) -> None:
         if self.active_workflow:
             self.active_workflow.reset()
