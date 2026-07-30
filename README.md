@@ -102,6 +102,16 @@ mit den Workflows, den Einstellungen und „Beenden".
   | `Strg+Alt+3` | Schnacker Platt |
   | `Strg+Alt+4` | Schnacker Basel |
 
+- **Push-to-Talk:** `Strg+Super` (Windows-Taste) **halten** startet die Aufnahme,
+  **loslassen** stoppt sie und fügt automatisch ein. `Esc` verwirft eine laufende
+  Aufnahme, ohne sie einzufügen.
+
+  Welcher Workflow auf `Strg+Super` liegt, wählst du im Tab „Anpassen" unter
+  **Tastenkürzel** — alle vier Workflows stehen zur Wahl, dazu **„Aus"**. „Aus" schaltet
+  Push-to-Talk und den Esc-Abbruch komplett ab: dann startet Schnacker den
+  Tastatur-Listener gar nicht und liest keine Tastendrücke mit. Die Umschaltung auf
+  bzw. von „Aus" wirkt erst nach einem Neustart der App.
+
 ### Sicherer Lokaler Modus (offline)
 
 Im Tab „Anpassen" (oder direkt im Hauptmenü über den Schalter) lässt sich der lokale
@@ -129,12 +139,22 @@ Basel) sind im lokalen Modus pausiert, weil sie OpenAI brauchen — genau wie im
 
 Wayland sperrt aus Sicherheitsgründen einige Dinge, die das macOS-Original nutzt. Daher:
 
-- **Tastenkürzel** sind GNOME-Systemkürzel (`Strg+Alt+1`…) im **„Drücken"-Modus**
-  (1× drücken = Start, nochmal = Stopp). Das „Halten = aufnehmen" des Originals ist unter
-  Wayland nicht möglich; die wirkungslose Modus-Auswahl wurde daher entfernt.
-- **Auto-Einfügen** funktioniert nur bei Start über ein Tastenkürzel. Beim Start über das
-  Fenster geht der Text in die Zwischenablage (Wayland erlaubt kein zuverlässiges
-  Zurückspringen ins vorherige Fenster).
+- **Die vier Profil-Kürzel** (`Strg+Alt+1`…) sind GNOME-Systemkürzel im
+  **„Drücken"-Modus** (1× drücken = Start, nochmal = Stopp). GNOME-Kürzel kennen kein
+  Halten/Loslassen — sie können nur „Taste gedrückt → Befehl ausführen".
+- **Push-to-Talk** (`Strg+Super` halten) und der **Esc-Abbruch** laufen deshalb über
+  einen eigenen, rohen Tastatur-Listener (`evdev`, siehe
+  `blitztext/services/global_hotkeys.py`) statt über GNOME-Kürzel — das ist unter
+  Wayland der einzige Weg, Halten und Loslassen zu unterscheiden.
+
+  Der Listener öffnet die Tastaturen **nur lesend** und ruft nie `grab()` auf: die
+  Tasten kommen ganz normal auch bei allen anderen Programmen an, er hört nur mit.
+  Das heißt aber auch, dass Schnacker währenddessen alle Tastendrücke sieht. Wer das
+  nicht möchte, stellt `Strg+Super` auf **„Aus"** — dann wird der Listener nicht
+  gestartet. Nichts davon verlässt den Rechner.
+- **Auto-Einfügen** funktioniert nur bei Start über ein Tastenkürzel oder Push-to-Talk.
+  Beim Start über das Fenster geht der Text in die Zwischenablage (Wayland erlaubt kein
+  zuverlässiges Zurückspringen ins vorherige Fenster).
 
 Die Bedienlogik, die deutschen Texte und die ersten beiden Workflows (Diktat, Schnacker+)
 folgen dem Original. **Schnacker Platt** und **Schnacker Basel** sind eigene Anpassungen und
@@ -168,6 +188,12 @@ python3 tests/gui_smoke.py
   auf `/dev/uinput` darf: `ydotool key ctrl` (Exit-Code 0 = ok). Auto-Einfügen klappt nur,
   wenn der Workflow **per Tastenkürzel** (nicht über das Fenster) gestartet wurde.
 - **„ydotool fehlt":** `./setup.sh` erneut ausführen.
+- **Push-to-Talk (`Strg+Super`) oder Esc-Abbruch reagieren nicht:** meist fehlt die
+  Gruppe `input` — nach `./setup.sh` einmal ab- und wieder anmelden (dieselbe
+  Mitgliedschaft wie für ydotool). Prüfen mit `groups | grep input`. Startest du
+  Schnacker im Terminal (`.venv/bin/python -m blitztext`), nennt eine Zeile
+  `[global_hotkeys] …` den Grund. Die Funktion schaltet sich dann nur selbst ab, der
+  Rest der App läuft normal weiter. Und: steht die Auswahl auf „Aus", ist es Absicht.
 - **Kein Mikrofon:** in den Ubuntu-Einstellungen unter *Ton → Eingang* das richtige Gerät
   wählen.
 - **Tastenkürzel kollidiert:** `Strg+Alt+1` etc. ggf. in *Einstellungen → Tastatur* anpassen.

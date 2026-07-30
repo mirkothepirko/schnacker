@@ -40,7 +40,7 @@ fi
 "$VENV_DIR/bin/pip" install -r "$PROJECT_DIR/requirements.txt"
 
 # ---------------------------------------------------------------------------
-say "3/4  Auto-Einfügen (ydotool) einrichten"
+say "3/4  Auto-Einfügen (ydotool) + Tastatur-Kürzel (Push-to-Talk/Esc) einrichten"
 # udev-Regel: erlaubt der Gruppe 'input' den Zugriff auf /dev/uinput.
 UDEV_RULE="/etc/udev/rules.d/80-blitztext-uinput.rules"
 if [ ! -f "$UDEV_RULE" ]; then
@@ -50,6 +50,9 @@ if [ ! -f "$UDEV_RULE" ]; then
   sudo udevadm trigger /dev/uinput || true
 fi
 # Aktuellen Benutzer der Gruppe 'input' hinzufügen (greift erst nach Neu-Anmeldung).
+# Dieselbe Mitgliedschaft erlaubt zusätzlich zu ydotool/uinput auch das LESEN der
+# /dev/input/eventX-Geräte (Standard-Ubuntu-udev-Regel) — das braucht Push-to-Talk
+# (Strg+Super halten) und der Esc-Abbruch, siehe blitztext/services/global_hotkeys.py.
 if ! id -nG "$USER" | grep -qw input; then
   sudo usermod -aG input "$USER"
   NEED_RELOGIN=1

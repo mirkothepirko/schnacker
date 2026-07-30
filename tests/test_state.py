@@ -13,7 +13,7 @@ import unittest
 from unittest import mock
 
 from blitztext import models
-from blitztext.models import LaunchSource, WorkflowType
+from blitztext.models import LaunchSource, PushToTalkTarget, WorkflowType
 from blitztext.services import settings_store
 
 
@@ -271,6 +271,127 @@ class ModelsTest(unittest.TestCase):
     def test_nur_manueller_start_zeigt_die_workflow_seite(self) -> None:
         self.assertTrue(LaunchSource.MANUAL.presents_workflow_page)
         self.assertFalse(LaunchSource.HOTKEY_BACKGROUND.presents_workflow_page)
+
+
+class _FakePhase:
+    def __init__(self, is_active: bool) -> None:
+        self.is_active = is_active
+
+
+class _FakeWorkflow:
+    """Nur die Felder, die start/stop/cancel abfragen."""
+
+    def __init__(self, *, is_active: bool = True, is_recording: bool = True) -> None:
+        self.phase = _FakePhase(is_active)
+        self.is_recording = is_recording
+
+
+class PushToTalkZielTest(unittest.TestCase):
+    """Welcher Workflow liegt auf Strg+Super? Das ist ab jetzt einstellbar."""
+
+    def test_jedes_ziel_bildet_auf_seinen_workflow_ab(self) -> None:
+        for ziel in PushToTalkTarget:
+            with self.subTest(ziel=ziel):
+                if ziel is PushToTalkTarget.OFF:
+                    self.assertIsNone(ziel.workflow)
+                else:
+                    self.assertEqual(ziel.workflow, WorkflowType(ziel.value))
+
+    def test_jedes_ziel_hat_einen_anzeigenamen(self) -> None:
+        for ziel in PushToTalkTarget:
+            with self.subTest(ziel=ziel):
+                self.assertTrue(ziel.display_name)
+        self.assertEqual(PushToTalkTarget.OFF.display_name, "Aus")
+
+    def test_werte_deckungsgleich_mit_workflowtype(self) -> None:
+        """Die Gleichheit der Werte ist der ganze Trick — sonst braucht es eine
+        Zuordnungstabelle, die man beim nächsten Workflow vergisst."""
+        self.assertEqual({z.value for z in PushToTalkTarget} - {"off"},
+                         {t.value for t in WorkflowType})
+
+
+class PushToTalkAblaufTest(unittest.TestCase):
+    def tearDown(self) -> None:
+        mock.patch.stopall()
+
+    def _zustand(self, ziel: PushToTalkTarget):
+        st = zustand(key_vorhanden=True)
+        st.settings.app.push_to_talk_target = ziel
+        return st
+
+    def test_startet_den_eingestellten_workflow(self) -> None:
+        for ziel in PushToTalkTarget:
+            if ziel is PushToTalkTarget.OFF:
+                continue
+            with self.subTest(ziel=ziel):
+                st = self._zustand(ziel)
+                with mock.patch.object(st, "start_workflow") as start:
+                    st.start_push_to_talk()
+                start.assert_called_once_with(ziel.workflow,
+                                             LaunchSource.HOTKEY_BACKGROUND)
+
+    def test_aus_startet_gar_nichts(self) -> None:
+        st = self._zustand(PushToTalkTarget.OFF)
+        with mock.patch.object(st, "start_workflow") as start:
+            st.start_push_to_talk()
+        start.assert_not_called()
+
+    def test_laufender_workflow_wird_nicht_unterbrochen(self) -> None:
+        # Nachgreifen während der Aufnahme darf sie nicht abschneiden.
+        st = self._zustand(PushToTalkTarget.TRANSCRIPTION)
+        st.active_workflow = _FakeWorkflow(is_active=True)
+        with mock.patch.object(st, "start_workflow") as start:
+            st.start_push_to_talk()
+        start.assert_not_called()
+
+    def test_beendeter_workflow_blockiert_den_neustart_nicht(self) -> None:
+        st = self._zustand(PushToTalkTarget.TRANSCRIPTION)
+        st.active_workflow = _FakeWorkflow(is_active=False)
+        with mock.patch.object(st, "start_workflow") as start:
+            st.start_push_to_talk()
+        start.assert_called_once()
+
+    def test_loslassen_stoppt_die_aufnahme(self) -> None:
+        st = self._zustand(PushToTalkTarget.TRANSCRIPTION)
+        st.active_workflow = _FakeWorkflow(is_recording=True)
+        with mock.patch.object(st, "stop_current_workflow") as stop:
+            st.stop_push_to_talk()
+        stop.assert_called_once()
+
+    def test_loslassen_waehrend_der_verarbeitung_stoppt_nichts(self) -> None:
+        # Nach dem Loslassen läuft der API-Aufruf — den darf ein zweites
+        # ptt_stop nicht abwürgen.
+        st = self._zustand(PushToTalkTarget.TRANSCRIPTION)
+        st.active_workflow = _FakeWorkflow(is_recording=False)
+        with mock.patch.object(st, "stop_current_workflow") as stop:
+            st.stop_push_to_talk()
+        stop.assert_not_called()
+
+    def test_loslassen_ohne_workflow_ist_harmlos(self) -> None:
+        st = self._zustand(PushToTalkTarget.TRANSCRIPTION)
+        st.active_workflow = None
+        st.stop_push_to_talk()  # darf nicht krachen
+
+    def test_esc_verwirft_die_laufende_aufnahme(self) -> None:
+        st = self._zustand(PushToTalkTarget.TRANSCRIPTION)
+        st.active_workflow = _FakeWorkflow(is_recording=True)
+        with mock.patch.object(st, "reset_current_workflow") as reset:
+            st.cancel_recording()
+        reset.assert_called_once()
+
+    def test_esc_verwirft_nichts_waehrend_der_verarbeitung(self) -> None:
+        """Der eigentliche Bugfix: Esc darf nicht einfügen, aber auch nicht
+        mitten im API-Aufruf den Zustand zerlegen."""
+        st = self._zustand(PushToTalkTarget.TRANSCRIPTION)
+        st.active_workflow = _FakeWorkflow(is_recording=False)
+        with mock.patch.object(st, "reset_current_workflow") as reset:
+            st.cancel_recording()
+        reset.assert_not_called()
+
+    def test_esc_ohne_workflow_ist_harmlos(self) -> None:
+        st = self._zustand(PushToTalkTarget.TRANSCRIPTION)
+        st.active_workflow = None
+        st.cancel_recording()  # darf nicht krachen
 
 
 if __name__ == "__main__":

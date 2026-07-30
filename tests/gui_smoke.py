@@ -50,7 +50,8 @@ with mock.patch("blitztext.services.keychain.is_configured", return_value=True):
         Gtk.main_iteration_do(False)
 
     for name, combo in (("Schreibstil", app.popover._settings_view._tone_combo),
-                        ("Lokales Modell", app.popover._settings_view._model_combo)):
+                        ("Lokales Modell", app.popover._settings_view._model_combo),
+                        ("Strg+Super", app.popover._settings_view._ptt_combo)):
         combo.emit("popup")
         while Gtk.events_pending():
             Gtk.main_iteration_do(False)
@@ -69,6 +70,20 @@ with mock.patch("blitztext.services.keychain.is_configured", return_value=True):
     app.popover._on_focus_out(app.popover, None)
     assert not app.app_state.is_popover_shown, "Fokusverlust schließt das Fenster nicht mehr"
     print("Gegenprobe: Fokusverlust ohne offene Liste schließt weiterhin")
+
+    # Push-to-Talk: "Aus" darf den rohen Tastatur-Listener gar nicht starten —
+    # das ist der Sinn der Option (die App liest dann keine Tastendrücke mit).
+    from blitztext.models import PushToTalkTarget
+    from blitztext.services import global_hotkeys
+
+    for ziel, soll_starten in ((PushToTalkTarget.OFF, False),
+                               (PushToTalkTarget.TRANSCRIPTION, True)):
+        app.app_state.settings.app.push_to_talk_target = ziel
+        with mock.patch.object(global_hotkeys, "start", return_value=True) as start:
+            app.start_global_hotkeys()
+        gestartet = start.called
+        print(f"Listener bei {ziel.value:14s} gestartet: {gestartet}")
+        assert gestartet is soll_starten, f"Listener-Start bei {ziel.value} falsch"
 
     # Status-Animation durchschalten (rendert Icons + Tooltips)
     from blitztext.state import MenuBarStatus, StatusKind

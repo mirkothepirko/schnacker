@@ -122,9 +122,12 @@ class SettingsStoreTest(unittest.TestCase):
         self.assertEqual(set(raw), {"app", "transcription", "textImprovement",
                                     "dampfAblassen", "emojiText"})
         # "hotkeyMode" ist absichtlich weg: die Einstellung hatte keine Wirkung.
+        # "pushToTalkTarget" ist ihr Nachfolger — im Unterschied zu ihr wird er
+        # tatsächlich ausgelesen (welcher Workflow auf Strg+Super liegt).
         self.assertEqual(set(raw["app"]), {
             "hasSeenOnboarding", "secureLocalModeEnabled",
             "selectedLocalTranscriptionModelName", "hasAutoSelectedFastLocalModel",
+            "pushToTalkTarget",
         })
         self.assertEqual(set(raw["transcription"]), {"language"})
         self.assertEqual(set(raw["textImprovement"]),
@@ -152,6 +155,41 @@ class SettingsStoreTest(unittest.TestCase):
         # Fehlende Gruppe -> Standardwert
         self.assertEqual(bundle.dampf_ablassen.system_prompt,
                          models.DAMPF_ABLASSEN_DEFAULT_PROMPT)
+
+    def test_push_to_talk_ziel_wird_gespeichert_und_gelesen(self) -> None:
+        bundle = settings_store.SettingsBundle()
+        bundle.app.push_to_talk_target = models.PushToTalkTarget.DAMPF_ABLASSEN
+        settings_store.save(bundle)
+
+        raw = json.loads(self.settings_path.read_text(encoding="utf-8"))
+        self.assertEqual(raw["app"]["pushToTalkTarget"], "dampfAblassen")
+        self.assertEqual(settings_store.load().app.push_to_talk_target,
+                         models.PushToTalkTarget.DAMPF_ABLASSEN)
+
+    def test_push_to_talk_aus_wird_gespeichert(self) -> None:
+        # "off" ist ein echter Wert, kein fehlendes Feld — sonst würde Aus beim
+        # nächsten Start wieder auf Diktat springen.
+        bundle = settings_store.SettingsBundle()
+        bundle.app.push_to_talk_target = models.PushToTalkTarget.OFF
+        settings_store.save(bundle)
+        self.assertEqual(settings_store.load().app.push_to_talk_target,
+                         models.PushToTalkTarget.OFF)
+
+    def test_alte_datei_ohne_push_to_talk_ziel_bekommt_diktat(self) -> None:
+        """Dateien von vor dieser Version haben den Schlüssel nicht. Standard ist
+        Diktat, damit Strg+Super nach dem Update sofort wieder wie früher arbeitet."""
+        self.settings_path.parent.mkdir(parents=True, exist_ok=True)
+        self.settings_path.write_text(
+            json.dumps({"app": {"hasSeenOnboarding": True}}), encoding="utf-8")
+        self.assertEqual(settings_store.load().app.push_to_talk_target,
+                         models.PushToTalkTarget.TRANSCRIPTION)
+
+    def test_kaputtes_push_to_talk_ziel_fuehrt_zum_standard(self) -> None:
+        self.settings_path.parent.mkdir(parents=True, exist_ok=True)
+        self.settings_path.write_text(
+            json.dumps({"app": {"pushToTalkTarget": "gibt-es-nicht"}}), encoding="utf-8")
+        self.assertEqual(settings_store.load().app.push_to_talk_target,
+                         models.PushToTalkTarget.TRANSCRIPTION)
 
     def test_unbekannter_enum_wert_fuehrt_zum_standard(self) -> None:
         self.settings_path.parent.mkdir(parents=True, exist_ok=True)

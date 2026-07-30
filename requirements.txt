@@ -7,3 +7,4 @@ sounddevice>=0.4.6      # Mikrofon-Aufnahme (braucht das System-Paket libportaud
 numpy>=1.24             # Audio-Daten als Zahlen-Array (von sounddevice geliefert)
 keyring>=24.0           # API-Key sicher im GNOME-Schlüsselbund speichern
 faster-whisper>=1.0.0   # Lokale, offline Spracherkennung (Ersatz für WhisperKit)
+evdev>=1.6.0            # Roher Tastatur-Listener für Push-to-Talk (Strg+Super) + Esc-Abbruch
