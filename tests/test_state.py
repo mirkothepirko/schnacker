@@ -94,8 +94,8 @@ class AnzeigenamenTest(unittest.TestCase):
 
     def test_ohne_eigenen_namen_gilt_der_standardname(self) -> None:
         st = zustand()
-        self.assertEqual(st.display_name(WorkflowType.TRANSCRIPTION), "Schnacker")
-        self.assertEqual(st.display_name(WorkflowType.TEXT_IMPROVER), "Schnacker+")
+        self.assertEqual(st.display_name(WorkflowType.TRANSCRIPTION), "Diktat")
+        self.assertEqual(st.display_name(WorkflowType.TEXT_IMPROVER), "Lektorat")
 
     def test_eigener_name_gewinnt(self) -> None:
         st = zustand()
@@ -105,7 +105,7 @@ class AnzeigenamenTest(unittest.TestCase):
     def test_eigener_name_aus_leerzeichen_wird_ignoriert(self) -> None:
         st = zustand()
         st.settings.dampf_ablassen.custom_name = "   "
-        self.assertEqual(st.display_name(WorkflowType.DAMPF_ABLASSEN), "Schnacker Platt")
+        self.assertEqual(st.display_name(WorkflowType.DAMPF_ABLASSEN), "Platt")
 
     def test_untertitel_zeigt_den_aktiven_transkriptions_weg(self) -> None:
         online = zustand(lokal_an=False)

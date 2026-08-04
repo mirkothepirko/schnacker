@@ -265,7 +265,7 @@ class LLMWorkflowsTest(WorkflowTestBase):
     def test_verbessern_meldet_das_keine_aufnahme_signal_ebenfalls(self) -> None:
         """Neu und bewusst: vorher prüften nur Platt/Basel dieses Signalwort.
 
-        Ohne die Prüfung würde bei Schnacker+ im Fehlerfall wörtlich
+        Ohne die Prüfung würde bei Lektorat im Fehlerfall wörtlich
         "KEINE_AUFNAHME_ERKANNT" in den Text eingefügt.
         """
         wf = self.baue(llm_workflow.text_improvement(settings=TextImprovementSettings()))

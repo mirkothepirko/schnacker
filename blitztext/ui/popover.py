@@ -41,37 +41,71 @@ def soll_bei_fokusverlust_schliessen(workflow, dropdown_offen: bool) -> bool:
     return True
 
 
+# Design-Tokens — identisch zur Windows-Version (blablatext.py, Klasse BlablaWindow),
+# damit beide Plattformen gleich aussehen. Bewusst feste Farben statt der
+# GTK-Theme-Farben (@theme_bg_color …): das Erscheinungsbild soll auf jedem
+# GNOME-Theme gleich sein, nicht vom System-Hell/Dunkel-Modus abhängen.
 _CSS = b"""
-.popover-root { background-color: @theme_bg_color; }
-.app-title { font-weight: 600; font-size: 11pt; }
-.app-badge { color: alpha(@theme_fg_color, 0.45); font-size: 9pt; }
+.popover-root,
+.popover-root * {
+    font-family: "Onest", "Segoe UI", "Cantarell", sans-serif;
+    color: #000D70;
+}
+.popover-root { background-color: #E0E0E0; }
+.app-title { font-weight: 600; font-size: 12pt; }
+.app-badge { color: #5B5F7A; font-size: 9pt; }
 .status-ready { font-weight: 700; font-size: 13pt; }
-.section-label { font-size: 9pt; font-weight: 600; color: alpha(@theme_fg_color, 0.55); }
-.hint-text { font-size: 9pt; color: alpha(@theme_fg_color, 0.6); }
-.mono { font-family: monospace; font-size: 9pt; color: alpha(@theme_fg_color, 0.6); }
+.section-label { font-size: 9pt; font-weight: 600; color: #5B5F7A; }
+.hint-text { font-size: 9pt; color: #5B5F7A; }
+.mono { font-family: monospace; font-size: 9pt; color: #5B5F7A; }
 .workflow-name { font-weight: 500; font-size: 11pt; }
-.workflow-subtitle { font-size: 9pt; color: alpha(@theme_fg_color, 0.6); }
+.workflow-subtitle { font-size: 9pt; color: #5B5F7A; }
 .workflow-icon {
-    background-color: alpha(@theme_fg_color, 0.06);
+    background-color: #F5F5F5;
+    border: 1px solid #C8C8CE;
     border-radius: 10px;
     font-size: 15pt;
 }
-.workflow-row:hover { background-color: alpha(@theme_fg_color, 0.05); border-radius: 10px; }
+.workflow-row:hover { background-color: rgba(242, 166, 0, 0.18); border-radius: 10px; }
 .hotkey-chip {
-    background-color: alpha(@theme_fg_color, 0.10);
+    background-color: #F2A600;
+    color: #000D70;
     border-radius: 6px;
     padding: 2px 7px;
     font-size: 9pt;
     font-weight: 600;
 }
-.term-chip { background-color: alpha(@theme_fg_color, 0.06); border-radius: 12px; padding: 2px 4px 2px 8px; }
+.term-chip {
+    background-color: #F5F5F5;
+    border: 1px solid #C8C8CE;
+    border-radius: 12px;
+    padding: 2px 4px 2px 8px;
+}
 .panel {
-    background-color: alpha(@theme_fg_color, 0.035);
+    background-color: #F5F5F5;
+    border: 1px solid #C8C8CE;
     border-radius: 10px;
     padding: 10px;
 }
-.result-text { font-size: 9pt; color: alpha(@theme_fg_color, 0.6); }
+.result-text { font-size: 9pt; color: #5B5F7A; }
 .big-title { font-weight: 600; font-size: 13pt; }
+entry, textview, textview text {
+    background-color: #F5F5F5;
+    color: #000D70;
+    border: 1px solid #C8C8CE;
+    border-radius: 6px;
+}
+entry:focus, textview:focus { border-color: #F2A600; }
+.brand-action {
+    background-image: none;
+    background-color: #000D70;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-weight: 600;
+}
+.brand-action:hover { background-color: #F2A600; color: #000D70; }
 """
 
 
@@ -223,7 +257,7 @@ class PopoverWindow(Gtk.Window):
         header.set_margin_start(16)
         header.set_margin_end(16)
         header.set_margin_bottom(8)
-        title = Gtk.Label(label="Schnacker")
+        title = Gtk.Label(label="blablatext")
         title.get_style_context().add_class("app-title")
         header.pack_start(title, False, False, 0)
         badge = Gtk.Label(label="Ubuntu Preview")
@@ -300,7 +334,7 @@ class PopoverWindow(Gtk.Window):
         name = Gtk.Label(label="Sicherer lokaler Modus" if secure else "Online Whisper", xalign=0)
         name.get_style_context().add_class("workflow-name")
         sub_text = (f"Lokal mit {st.selected_local_model_display}." if secure and st.selected_local_model_is_installed
-                    else "Schnacker nutzt gerade die OpenAI-Transkription." if not secure
+                    else "blablatext nutzt gerade die OpenAI-Transkription." if not secure
                     else f"{st.selected_local_model_display} ist noch nicht installiert.")
         sub = Gtk.Label(label=sub_text, xalign=0)
         sub.get_style_context().add_class("workflow-subtitle")
@@ -336,7 +370,7 @@ class PopoverWindow(Gtk.Window):
         box.set_margin_start(16)
         box.set_margin_end(16)
 
-        title = Gtk.Label(label="Willkommen bei Schnacker", xalign=0)
+        title = Gtk.Label(label="Willkommen bei blablatext", xalign=0)
         title.get_style_context().add_class("big-title")
         box.pack_start(title, False, False, 0)
 
@@ -350,7 +384,7 @@ class PopoverWindow(Gtk.Window):
         steps = [
             ("1", "OpenAI Key speichern", "Öffne die Einstellungen und trage deinen OpenAI API Key ein."),
             ("2", "Auto-Einfügen einrichten", "Einmal ./setup.sh ausführen (installiert ydotool)."),
-            ("3", "Workflow wählen", "Schnacker oder einen Verbesserer-Workflow aus dem Menü starten."),
+            ("3", "Workflow wählen", "Diktat oder einen Verbesserer-Workflow aus dem Menü starten."),
         ]
         for number, head, detail in steps:
             row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)

@@ -34,10 +34,10 @@ class WorkflowType(str, Enum):
     @property
     def display_name(self) -> str:
         return {
-            WorkflowType.TRANSCRIPTION: "Schnacker",
-            WorkflowType.TEXT_IMPROVER: "Schnacker+",
-            WorkflowType.DAMPF_ABLASSEN: "Schnacker Platt",
-            WorkflowType.EMOJI_TEXT: "Schnacker Basel",
+            WorkflowType.TRANSCRIPTION: "Diktat",
+            WorkflowType.TEXT_IMPROVER: "Lektorat",
+            WorkflowType.DAMPF_ABLASSEN: "Platt",
+            WorkflowType.EMOJI_TEXT: "Basel",
         }[self]
 
     @property
@@ -96,7 +96,7 @@ class TranscriptionBackend(str, Enum):
 # MARK: - Einstellungen (Defaults exakt wie im Original) ----------------------
 
 
-# Standard-System-Prompt für "Schnacker Platt" — übersetzt Hochdeutsch nach Plattdeutsch.
+# Standard-System-Prompt für "Platt" — übersetzt Hochdeutsch nach Plattdeutsch.
 # (Workflow heißt intern weiter "dampfAblassen", damit Tastenkürzel/Settings stabil bleiben.)
 DAMPF_ABLASSEN_DEFAULT_PROMPT = (
     "Du bist ein Übersetzer für Plattdeutsch (Niederdeutsch). Du bekommst einen auf Hochdeutsch "
@@ -108,7 +108,7 @@ DAMPF_ABLASSEN_DEFAULT_PROMPT = (
 )
 
 
-# Standard-System-Prompt für "Schnacker Basel" — übersetzt Hochdeutsch nach Baseldütsch.
+# Standard-System-Prompt für "Basel" — übersetzt Hochdeutsch nach Baseldütsch.
 # (Workflow heißt intern weiter "emojiText", damit Tastenkürzel/Settings stabil bleiben.)
 BASEL_DEFAULT_PROMPT = (
     "Du bist ein Übersetzer für Baseldütsch (das alemannische Schweizerdeutsch aus dem Raum "

@@ -116,7 +116,7 @@ class CompleteTest(unittest.TestCase):
 
 
 class SystemPromptTest(unittest.TestCase):
-    """Der zusammengebaute Lektorats-Prompt für Schnacker+."""
+    """Der zusammengebaute Lektorats-Prompt für Lektorat."""
 
     def test_eigener_prompt_ersetzt_den_standard(self) -> None:
         s = TextImprovementSettings(system_prompt="Nur Rechtschreibung.")

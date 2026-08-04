@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Einrichtungs-Skript für Schnacker (Ubuntu / GNOME / Wayland).
+# Einrichtungs-Skript für blablatext (Ubuntu / GNOME / Wayland).
 #
 # Was es tut:
 #   1. Installiert die nötigen System-Pakete (apt) — fragt einmal nach sudo.
@@ -68,7 +68,7 @@ if [ -n "$YDOTOOLD_BIN" ]; then
   mkdir -p "$SERVICE_DIR"
   cat > "$SERVICE_DIR/ydotoold.service" <<EOF
 [Unit]
-Description=ydotool daemon (für Schnacker Auto-Einfügen)
+Description=ydotool daemon (für blablatext Auto-Einfügen)
 
 [Service]
 ExecStart=$YDOTOOLD_BIN -p %t/.ydotool_socket -P 0660
@@ -91,7 +91,7 @@ mkdir -p "$APPS_DIR"
 cat > "$APPS_DIR/blitztext.desktop" <<EOF
 [Desktop Entry]
 Type=Application
-Name=Schnacker
+Name=blablatext
 Comment=Sprache zu Text in der Menüleiste
 Exec=$VENV_DIR/bin/python -m blitztext
 Path=$PROJECT_DIR
@@ -103,7 +103,7 @@ update-desktop-database "$APPS_DIR" 2>/dev/null || true
 
 say "Fertig!"
 echo "Starten mit:   $VENV_DIR/bin/python -m blitztext"
-echo "Oder über das Anwendungsmenü: 'Schnacker'."
+echo "Oder über das Anwendungsmenü: 'blablatext'."
 if [ "${NEED_RELOGIN:-0}" = "1" ]; then
   echo
   echo "WICHTIG: Bitte einmal ab- und wieder anmelden, damit das Auto-Einfügen (ydotool) funktioniert."

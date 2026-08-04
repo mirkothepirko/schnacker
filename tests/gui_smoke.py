@@ -16,12 +16,12 @@ gi.require_version("Gtk", "3.0")
 from gi.repository import GLib, Gtk
 from unittest import mock
 
-from blitztext.app import SchnackerApp, socket_path, send_trigger, is_running
+from blitztext.app import BlablatextApp, socket_path, send_trigger, is_running
 from blitztext.state import Page
 from blitztext.models import WorkflowType
 
 with mock.patch("blitztext.services.keychain.is_configured", return_value=True):
-    app = SchnackerApp()
+    app = BlablatextApp()
     app.start_socket_server()
     print("App gebaut, Socket lauscht:", is_running())
 

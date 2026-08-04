@@ -15,7 +15,7 @@ from .models import WorkflowType
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(prog="blitztext", description="Schnacker für Ubuntu")
+    parser = argparse.ArgumentParser(prog="blitztext", description="blablatext für Ubuntu")
     parser.add_argument("--trigger", metavar="WORKFLOW",
                         help="Workflow per Tastenkürzel starten/stoppen "
                              "(transcription, textImprover, dampfAblassen, emojiText).")
@@ -39,16 +39,16 @@ def main() -> None:
 
         from .app import send_trigger
         if not send_trigger(args.trigger):
-            print("Schnacker läuft nicht. Bitte zuerst die App starten.", file=sys.stderr)
+            print("blablatext läuft nicht. Bitte zuerst die App starten.", file=sys.stderr)
             sys.exit(1)
         return
 
     # Normale App starten — aber nur eine Instanz gleichzeitig.
-    from .app import SchnackerApp, is_running
+    from .app import BlablatextApp, is_running
     if is_running():
-        print("Schnacker läuft bereits (siehe Menüleisten-Symbol).")
+        print("blablatext läuft bereits (siehe Menüleisten-Symbol).")
         return
-    SchnackerApp().run()
+    BlablatextApp().run()
 
 
 if __name__ == "__main__":
