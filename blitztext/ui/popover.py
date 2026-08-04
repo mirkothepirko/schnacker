@@ -53,7 +53,7 @@ _CSS = b"""
     font-family: "Onest", "Segoe UI", "Cantarell", sans-serif;
     color: #000D70;
 }
-.popover-root { background-color: #E0E0E0; border-radius: 14px; }
+.popover-root { background-color: #FFFFFF; border-radius: 14px; }
 .app-title { font-weight: 700; font-size: 16pt; }
 .app-badge { color: #5B5F7A; font-size: 9pt; }
 .status-ready { font-weight: 700; font-size: 13pt; }
