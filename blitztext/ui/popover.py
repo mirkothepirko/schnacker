@@ -6,6 +6,7 @@ von vier Seiten zeigt: Hauptmenü, Onboarding, Einstellungen, aktiver Workflow.
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Callable
 
 import gi
@@ -21,6 +22,7 @@ from .waveform import WaveformView
 from .workflow_row import WorkflowRow
 
 _WIDTH = 360
+_LOGO_PFAD = Path(__file__).resolve().parents[1] / "resources" / "logo-header.png"
 
 
 def soll_bei_fokusverlust_schliessen(workflow, dropdown_offen: bool) -> bool:
@@ -51,8 +53,8 @@ _CSS = b"""
     font-family: "Onest", "Segoe UI", "Cantarell", sans-serif;
     color: #000D70;
 }
-.popover-root { background-color: #E0E0E0; }
-.app-title { font-weight: 600; font-size: 12pt; }
+.popover-root { background-color: #E0E0E0; border-radius: 14px; }
+.app-title { font-weight: 700; font-size: 16pt; }
 .app-badge { color: #5B5F7A; font-size: 9pt; }
 .status-ready { font-weight: 700; font-size: 13pt; }
 .section-label { font-size: 9pt; font-weight: 600; color: #5B5F7A; }
@@ -101,11 +103,24 @@ entry:focus, textview:focus { border-color: #F2A600; }
     background-color: #000D70;
     color: #FFFFFF;
     border: none;
-    border-radius: 6px;
-    padding: 6px 14px;
-    font-weight: 600;
+    border-radius: 20px;
+    padding: 9px 22px;
+    font-weight: 700;
+    font-size: 11pt;
 }
 .brand-action:hover { background-color: #F2A600; color: #000D70; }
+.header-logo { margin-right: 2px; }
+.stop-action {
+    background-image: none;
+    background-color: #E53935;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 24px;
+    min-width: 64px;
+    min-height: 48px;
+    font-size: 16pt;
+}
+.stop-action:hover { background-color: #F2A600; color: #000D70; }
 """
 
 
@@ -132,6 +147,16 @@ class PopoverWindow(Gtk.Window):
         self.set_default_size(_WIDTH, -1)
         self.set_size_request(_WIDTH, -1)
         self.get_style_context().add_class("popover-root")
+
+        # Ohne diesen Schritt bleiben die abgerundeten Ecken aus dem CSS
+        # (unten: "border-radius" bei .popover-root) unsichtbar — ohne
+        # RGBA-Visual füllt GTK den Fensterrahmen weiterhin rechteckig mit
+        # Schwarz auf, egal was die CSS-Ecke vorgibt. Klappt nur mit
+        # compositing Fenstermanager (unter GNOME/Wayland Standard).
+        screen = self.get_screen()
+        visual = screen.get_rgba_visual()
+        if visual is not None and screen.is_composited():
+            self.set_visual(visual)
 
         _install_css(self.get_screen())
 
@@ -257,6 +282,10 @@ class PopoverWindow(Gtk.Window):
         header.set_margin_start(16)
         header.set_margin_end(16)
         header.set_margin_bottom(8)
+        if _LOGO_PFAD.exists():
+            logo = Gtk.Image.new_from_file(str(_LOGO_PFAD))
+            logo.get_style_context().add_class("header-logo")
+            header.pack_start(logo, False, False, 0)
         title = Gtk.Label(label="blablatext")
         title.get_style_context().add_class("app-title")
         header.pack_start(title, False, False, 0)
@@ -490,6 +519,7 @@ class PopoverWindow(Gtk.Window):
         b.pack_start(self._waveform, False, False, 0)
 
         stop = Gtk.Button(label="⏹")
+        stop.get_style_context().add_class("stop-action")
         stop.set_halign(Gtk.Align.CENTER)
         stop.connect("clicked", lambda _b: self.app_state.stop_current_workflow())
         b.pack_start(stop, False, False, 0)
