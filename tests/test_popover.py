@@ -11,8 +11,8 @@ Fokusverlust geschlossen werden, ja oder nein?
 """
 import unittest
 
-from blitztext.models import Phase
-from blitztext.ui.popover import soll_bei_fokusverlust_schliessen
+from blablatext.models import Phase
+from blablatext.ui.popover import soll_bei_fokusverlust_schliessen
 
 
 class _FakePhase:

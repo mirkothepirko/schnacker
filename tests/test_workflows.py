@@ -13,7 +13,7 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 from unittest import mock
 
-from blitztext.models import (
+from blablatext.models import (
     DampfAblassenSettings,
     EmojiTextSettings,
     Phase,
@@ -21,8 +21,8 @@ from blitztext.models import (
     TranscriptionBackend,
     WorkflowType,
 )
-from blitztext.workflows import base, llm_workflow
-from blitztext.workflows.transcription import TranscriptionWorkflow
+from blablatext.workflows import base, llm_workflow
+from blablatext.workflows.transcription import TranscriptionWorkflow
 
 
 class FakeRecorder:
@@ -95,7 +95,7 @@ class BaseWorkflowTest(WorkflowTestBase):
 
     def test_zu_kurze_aufnahme_wird_verworfen_und_nicht_verschickt(self) -> None:
         wf = self.baue(TranscriptionWorkflow(), dauer=0.1)
-        with mock.patch("blitztext.services.transcription.transcribe") as t:
+        with mock.patch("blablatext.services.transcription.transcribe") as t:
             self.durchlaufen(wf)
         t.assert_not_called()
         self.assertEqual(self.letzte_phase, (Phase.ERROR, "Keine Aufnahme erkannt."))
@@ -106,7 +106,7 @@ class BaseWorkflowTest(WorkflowTestBase):
         for dauer, soll_verschickt_werden in [(0.29, False), (0.3, True)]:
             with self.subTest(dauer=dauer):
                 wf = self.baue(TranscriptionWorkflow(), dauer=dauer)
-                with mock.patch("blitztext.services.transcription.transcribe",
+                with mock.patch("blablatext.services.transcription.transcribe",
                                 return_value="Hi") as t:
                     self.durchlaufen(wf)
                 self.assertEqual(t.called, soll_verschickt_werden)
@@ -126,21 +126,21 @@ class BaseWorkflowTest(WorkflowTestBase):
     def test_eigennamen_werden_bei_sehr_kurzer_aufnahme_nicht_mitgeschickt(self) -> None:
         """Unter 0.9 s liefert Whisper mit Prompt eher Halluzinationen — wie im Original."""
         wf = self.baue(TranscriptionWorkflow(custom_terms=["Flötotto"]), dauer=0.5)
-        with mock.patch("blitztext.services.transcription.transcribe",
+        with mock.patch("blablatext.services.transcription.transcribe",
                         return_value="kurz") as t:
             self.durchlaufen(wf)
         self.assertEqual(t.call_args.kwargs["custom_terms"], [])
 
     def test_eigennamen_werden_ab_09_sekunden_mitgeschickt(self) -> None:
         wf = self.baue(TranscriptionWorkflow(custom_terms=["Flötotto"]), dauer=0.9)
-        with mock.patch("blitztext.services.transcription.transcribe",
+        with mock.patch("blablatext.services.transcription.transcribe",
                         return_value="Ein etwas laengerer Satz hier") as t:
             self.durchlaufen(wf)
         self.assertEqual(t.call_args.kwargs["custom_terms"], ["Flötotto"])
 
     def test_audiodatei_wird_nach_der_verarbeitung_geloescht(self) -> None:
         wf = self.baue(TranscriptionWorkflow())
-        with mock.patch("blitztext.services.transcription.transcribe", return_value="Hallo"):
+        with mock.patch("blablatext.services.transcription.transcribe", return_value="Hallo"):
             wf.start()
             wf.stop()
             pfad = wf._recorder.recording_path
@@ -149,7 +149,7 @@ class BaseWorkflowTest(WorkflowTestBase):
 
     def test_fehler_in_der_verarbeitung_wird_zur_fehlerphase(self) -> None:
         wf = self.baue(TranscriptionWorkflow())
-        with mock.patch("blitztext.services.transcription.transcribe",
+        with mock.patch("blablatext.services.transcription.transcribe",
                         side_effect=RuntimeError("API kaputt")):
             self.durchlaufen(wf)
         self.assertEqual(self.letzte_phase, (Phase.ERROR, "API kaputt"))
@@ -162,7 +162,7 @@ class BaseWorkflowTest(WorkflowTestBase):
             wf._cancelled = True
             return "Text der niemanden mehr interessiert"
 
-        with mock.patch("blitztext.services.transcription.transcribe",
+        with mock.patch("blablatext.services.transcription.transcribe",
                         side_effect=transkribieren_und_abbrechen):
             self.durchlaufen(wf)
         self.assertEqual(self.ausgaben, [])
@@ -173,7 +173,7 @@ class TranscriptionWorkflowTest(WorkflowTestBase):
 
     def test_online_transkription_gibt_text_aus(self) -> None:
         wf = self.baue(TranscriptionWorkflow())
-        with mock.patch("blitztext.services.transcription.transcribe",
+        with mock.patch("blablatext.services.transcription.transcribe",
                         return_value="  Hallo Welt  "):
             self.durchlaufen(wf)
         self.assertEqual(self.ausgaben, ["Hallo Welt"])
@@ -182,9 +182,9 @@ class TranscriptionWorkflowTest(WorkflowTestBase):
     def test_lokaler_modus_nutzt_das_lokale_modell(self) -> None:
         wf = self.baue(TranscriptionWorkflow(backend=TranscriptionBackend.LOCAL,
                                              local_model_name="small"))
-        with mock.patch("blitztext.services.local_transcription.transcribe",
+        with mock.patch("blablatext.services.local_transcription.transcribe",
                         return_value="lokal erkannt") as lokal, \
-             mock.patch("blitztext.services.transcription.transcribe") as online:
+             mock.patch("blablatext.services.transcription.transcribe") as online:
             self.durchlaufen(wf)
         online.assert_not_called()
         lokal.assert_called_once()
@@ -192,7 +192,7 @@ class TranscriptionWorkflowTest(WorkflowTestBase):
 
     def test_lokaler_modus_zeigt_eigenen_statustext(self) -> None:
         wf = self.baue(TranscriptionWorkflow(backend=TranscriptionBackend.LOCAL))
-        with mock.patch("blitztext.services.local_transcription.transcribe", return_value="x y z"):
+        with mock.patch("blablatext.services.local_transcription.transcribe", return_value="x y z"):
             self.durchlaufen(wf)
         texte = [t for _p, t in self.phasen]
         self.assertIn("Wird lokal transkribiert ...", texte)
@@ -200,7 +200,7 @@ class TranscriptionWorkflowTest(WorkflowTestBase):
     def test_whisper_artefakt_wird_abgefangen(self) -> None:
         # 0.4 s Aufnahme, aber ein langer Text zurück -> Halluzination.
         wf = self.baue(TranscriptionWorkflow(), dauer=0.4)
-        with mock.patch("blitztext.services.transcription.transcribe",
+        with mock.patch("blablatext.services.transcription.transcribe",
                         return_value="Vielen Dank fuers Zuschauen und bis zum naechsten Mal"):
             self.durchlaufen(wf)
         self.assertEqual(self.letzte_phase, (Phase.ERROR, "Keine Aufnahme erkannt."))
@@ -212,8 +212,8 @@ class LLMWorkflowsTest(WorkflowTestBase):
 
     def test_verbessern_transkribiert_dann_lektoriert(self) -> None:
         wf = self.baue(llm_workflow.text_improvement(settings=TextImprovementSettings()))
-        with mock.patch("blitztext.services.transcription.transcribe", return_value="roh text"), \
-             mock.patch("blitztext.services.llm.improve", return_value="Roher Text.") as verbessern:
+        with mock.patch("blablatext.services.transcription.transcribe", return_value="roh text"), \
+             mock.patch("blablatext.services.llm.improve", return_value="Roher Text.") as verbessern:
             self.durchlaufen(wf)
         self.assertEqual(verbessern.call_args.args[0], "roh text")
         self.assertEqual(self.ausgaben, ["Roher Text."])
@@ -226,8 +226,8 @@ class LLMWorkflowsTest(WorkflowTestBase):
 
     def test_platt_transkribiert_dann_uebersetzt(self) -> None:
         wf = self.baue(llm_workflow.dampf_ablassen(settings=DampfAblassenSettings()))
-        with mock.patch("blitztext.services.transcription.transcribe", return_value="Guten Tag"), \
-             mock.patch("blitztext.services.llm.dampf_ablassen", return_value="Moin") as platt:
+        with mock.patch("blablatext.services.transcription.transcribe", return_value="Guten Tag"), \
+             mock.patch("blablatext.services.llm.dampf_ablassen", return_value="Moin") as platt:
             self.durchlaufen(wf)
         self.assertEqual(platt.call_args.args[0], "Guten Tag")
         self.assertEqual(platt.call_args.args[1], DampfAblassenSettings().system_prompt)
@@ -236,8 +236,8 @@ class LLMWorkflowsTest(WorkflowTestBase):
 
     def test_basel_transkribiert_dann_uebersetzt(self) -> None:
         wf = self.baue(llm_workflow.basel_deutsch(settings=EmojiTextSettings()))
-        with mock.patch("blitztext.services.transcription.transcribe", return_value="Guten Tag"), \
-             mock.patch("blitztext.services.llm.basel_deutsch", return_value="Grüezi") as basel:
+        with mock.patch("blablatext.services.transcription.transcribe", return_value="Guten Tag"), \
+             mock.patch("blablatext.services.llm.basel_deutsch", return_value="Grüezi") as basel:
             self.durchlaufen(wf)
         self.assertEqual(basel.call_args.args[0], "Guten Tag")
         self.assertEqual(basel.call_args.args[1], EmojiTextSettings().system_prompt)
@@ -247,8 +247,8 @@ class LLMWorkflowsTest(WorkflowTestBase):
     def test_platt_meldet_das_keine_aufnahme_signal_des_modells(self) -> None:
         """Antwortet das Modell mit dem Signalwort, ist es keine echte Ausgabe."""
         wf = self.baue(llm_workflow.dampf_ablassen(settings=DampfAblassenSettings()))
-        with mock.patch("blitztext.services.transcription.transcribe", return_value="Guten Tag"), \
-             mock.patch("blitztext.services.llm.dampf_ablassen",
+        with mock.patch("blablatext.services.transcription.transcribe", return_value="Guten Tag"), \
+             mock.patch("blablatext.services.llm.dampf_ablassen",
                         return_value="KEINE_AUFNAHME_ERKANNT"):
             self.durchlaufen(wf)
         self.assertEqual(self.letzte_phase, (Phase.ERROR, "Keine Aufnahme erkannt."))
@@ -256,8 +256,8 @@ class LLMWorkflowsTest(WorkflowTestBase):
 
     def test_basel_meldet_das_keine_aufnahme_signal_des_modells(self) -> None:
         wf = self.baue(llm_workflow.basel_deutsch(settings=EmojiTextSettings()))
-        with mock.patch("blitztext.services.transcription.transcribe", return_value="Guten Tag"), \
-             mock.patch("blitztext.services.llm.basel_deutsch",
+        with mock.patch("blablatext.services.transcription.transcribe", return_value="Guten Tag"), \
+             mock.patch("blablatext.services.llm.basel_deutsch",
                         return_value="  KEINE_AUFNAHME_ERKANNT  "):
             self.durchlaufen(wf)
         self.assertEqual(self.letzte_phase, (Phase.ERROR, "Keine Aufnahme erkannt."))
@@ -269,8 +269,8 @@ class LLMWorkflowsTest(WorkflowTestBase):
         "KEINE_AUFNAHME_ERKANNT" in den Text eingefügt.
         """
         wf = self.baue(llm_workflow.text_improvement(settings=TextImprovementSettings()))
-        with mock.patch("blitztext.services.transcription.transcribe", return_value="Guten Tag"), \
-             mock.patch("blitztext.services.llm.improve",
+        with mock.patch("blablatext.services.transcription.transcribe", return_value="Guten Tag"), \
+             mock.patch("blablatext.services.llm.improve",
                         return_value="KEINE_AUFNAHME_ERKANNT"):
             self.durchlaufen(wf)
         self.assertEqual(self.letzte_phase, (Phase.ERROR, "Keine Aufnahme erkannt."))
@@ -278,9 +278,9 @@ class LLMWorkflowsTest(WorkflowTestBase):
 
     def test_llm_workflows_ueberspringen_das_llm_bei_artefakt(self) -> None:
         wf = self.baue(llm_workflow.dampf_ablassen(settings=DampfAblassenSettings()), dauer=0.4)
-        with mock.patch("blitztext.services.transcription.transcribe",
+        with mock.patch("blablatext.services.transcription.transcribe",
                         return_value="Vielen Dank fuers Zuschauen und bis zum naechsten Mal"), \
-             mock.patch("blitztext.services.llm.dampf_ablassen") as platt:
+             mock.patch("blablatext.services.llm.dampf_ablassen") as platt:
             self.durchlaufen(wf)
         platt.assert_not_called()
         self.assertEqual(self.letzte_phase, (Phase.ERROR, "Keine Aufnahme erkannt."))

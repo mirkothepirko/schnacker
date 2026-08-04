@@ -53,12 +53,21 @@ Das Skript macht der Reihe nach (und fragt dabei **einmal nach deinem sudo-Passw
 > dich **einmal ab- und wieder anmelden**, damit das automatische Einfügen funktioniert.
 > Vorher landet der Text trotzdem in der Zwischenablage (du fügst dann mit `Strg+V` ein).
 
+### Update von der Vorgängerversion (hieß „Schnacker" / Paket `blitztext`)
+
+Beim ersten Start übernimmt die App automatisch, was vorher schon da war:
+Einstellungen (`~/.config/blitztext` → `~/.config/blablatext`), die geladenen
+Whisper-Modelle (`~/.local/share/…`) und den OpenAI-Key aus dem Schlüsselbund.
+Nur die **GNOME-Tastenkürzel** zeigen noch auf den alten Paketnamen — einmal
+`./setup.sh` oder `.venv/bin/python -m blablatext --install-shortcuts` ausführen,
+dann stimmen auch die wieder.
+
 ---
 
 ## Starten
 
 ```bash
-.venv/bin/python -m blitztext
+.venv/bin/python -m blablatext
 ```
 
 …oder einfach **„blablatext"** im Anwendungsmenü suchen und anklicken.
@@ -144,7 +153,7 @@ Wayland sperrt aus Sicherheitsgründen einige Dinge, die das macOS-Original nutz
   Halten/Loslassen — sie können nur „Taste gedrückt → Befehl ausführen".
 - **Push-to-Talk** (`Strg+Super` halten) und der **Esc-Abbruch** laufen deshalb über
   einen eigenen, rohen Tastatur-Listener (`evdev`, siehe
-  `blitztext/services/global_hotkeys.py`) statt über GNOME-Kürzel — das ist unter
+  `blablatext/services/global_hotkeys.py`) statt über GNOME-Kürzel — das ist unter
   Wayland der einzige Weg, Halten und Loslassen zu unterscheiden.
 
   Der Listener öffnet die Tastaturen **nur lesend** und ruft nie `grab()` auf: die
@@ -191,7 +200,7 @@ python3 tests/gui_smoke.py
 - **Push-to-Talk (`Strg+Super`) oder Esc-Abbruch reagieren nicht:** meist fehlt die
   Gruppe `input` — nach `./setup.sh` einmal ab- und wieder anmelden (dieselbe
   Mitgliedschaft wie für ydotool). Prüfen mit `groups | grep input`. Startest du
-  blablatext im Terminal (`.venv/bin/python -m blitztext`), nennt eine Zeile
+  blablatext im Terminal (`.venv/bin/python -m blablatext`), nennt eine Zeile
   `[global_hotkeys] …` den Grund. Die Funktion schaltet sich dann nur selbst ab, der
   Rest der App läuft normal weiter. Und: steht die Auswahl auf „Aus", ist es Absicht.
 - **Kein Mikrofon:** in den Ubuntu-Einstellungen unter *Ton → Eingang* das richtige Gerät
@@ -203,7 +212,7 @@ python3 tests/gui_smoke.py
 ## Projektstruktur (spiegelt das Original)
 
 ```
-blitztext/
+blablatext/
   models.py             Typen & Einstellungen        (~ WorkflowProtocol.swift)
   state.py              Zentraler Zustand            (~ AppState.swift)
   app.py                Tray, Fenster, Socket        (~ BlitztextMacApp.swift)

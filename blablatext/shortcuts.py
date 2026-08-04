@@ -1,7 +1,7 @@
 """Tastenkürzel-Zuordnung (Linux/GNOME-Ersatz für die fn-Kürzel des Originals).
 
 Unter Wayland kann die App keine globalen Tastenkürzel selbst abfangen. Statt
-dessen legen wir GNOME-Systemkürzel an, die das Kommando `python -m blitztext
+dessen legen wir GNOME-Systemkürzel an, die das Kommando `python -m blablatext
 --trigger <workflow>` aufrufen. Hier stehen die Standard-Kürzel und ihre Zuordnung.
 """
 
@@ -43,7 +43,7 @@ def trigger_arg(t: WorkflowType) -> str:
 def install_gnome_shortcuts() -> str:
     """Legt Strg+Alt+1..4 als GNOME-Systemkürzel an (via gsettings).
 
-    Jedes Kürzel ruft `python -m blitztext --trigger <workflow>` auf, was die
+    Jedes Kürzel ruft `python -m blablatext --trigger <workflow>` auf, was die
     laufende App über den Socket erreicht und den Workflow startet/stoppt.
     """
     project_dir = Path(__file__).resolve().parents[1]
@@ -58,10 +58,10 @@ def install_gnome_shortcuts() -> str:
     try:
         paths: list[str] = []
         for i, t in enumerate(WorkflowType.main_menu_cases()):
-            kb_path = f"{base_path}blitztext{i}/"
+            kb_path = f"{base_path}blablatext{i}/"
             paths.append(kb_path)
             command = (f"bash -c 'cd {project_dir} && "
-                       f"{python} -m blitztext --trigger {trigger_arg(t)}'")
+                       f"{python} -m blablatext --trigger {trigger_arg(t)}'")
             gset(f"{item_schema}:{kb_path}", "name", f"blablatext: {t.display_name}")
             gset(f"{item_schema}:{kb_path}", "command", command)
             gset(f"{item_schema}:{kb_path}", "binding", GSETTINGS_BINDING[t])

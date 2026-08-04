@@ -16,7 +16,7 @@ original-reference/
 .claude/settings.local.json
 
 # Secrets — NIEMALS committen! (Key gehört in den GNOME-Schlüsselbund, nicht in Dateien)
-blitztext/OpenAI_API.txt
+blablatext/OpenAI_API.txt
 *api*key*.txt
 *.secret
 .env

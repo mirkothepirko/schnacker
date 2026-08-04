@@ -1,9 +1,9 @@
-"""Einstiegspunkt — gestartet mit `python -m blitztext`.
+"""Einstiegspunkt — gestartet mit `python -m blablatext`.
 
 Aufrufvarianten:
-    python -m blitztext                      App starten (Menüleisten-Symbol)
-    python -m blitztext --trigger <workflow> Workflow starten/stoppen (für GNOME-Kürzel)
-    python -m blitztext --install-shortcuts  GNOME-Kürzel Strg+Alt+1..4 einrichten
+    python -m blablatext                      App starten (Menüleisten-Symbol)
+    python -m blablatext --trigger <workflow> Workflow starten/stoppen (für GNOME-Kürzel)
+    python -m blablatext --install-shortcuts  GNOME-Kürzel Strg+Alt+1..4 einrichten
 """
 
 from __future__ import annotations
@@ -15,7 +15,7 @@ from .models import WorkflowType
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(prog="blitztext", description="blablatext für Ubuntu")
+    parser = argparse.ArgumentParser(prog="blablatext", description="blablatext für Ubuntu")
     parser.add_argument("--trigger", metavar="WORKFLOW",
                         help="Workflow per Tastenkürzel starten/stoppen "
                              "(transcription, textImprover, dampfAblassen, emojiText).")
@@ -48,6 +48,12 @@ def main() -> None:
     if is_running():
         print("blablatext läuft bereits (siehe Menüleisten-Symbol).")
         return
+
+    # Vor dem ersten Lesen der Einstellungen: Ordner der Vorgängerversion übernehmen.
+    from .services.settings_store import migriere_vorgaenger_ordner
+    for ordner in migriere_vorgaenger_ordner():
+        print(f"Übernommen aus der Vorgängerversion: {ordner}")
+
     BlablatextApp().run()
 
 

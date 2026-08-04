@@ -40,7 +40,7 @@ from .ui.tray_icon import TrayIconRenderer
 def socket_path() -> str:
     """Pfad des Steuer-Sockets (für Einzel-Instanz + Tastenkürzel-Befehle)."""
     runtime = os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")
-    return f"{runtime}/blitztext.sock"
+    return f"{runtime}/blablatext.sock"
 
 
 # MARK: - Trigger-Client (für `--trigger`) ------------------------------------
@@ -80,7 +80,7 @@ class BlablatextApp:
 
         # AppIndicator (Menüleisten-Symbol)
         self.indicator = AppIndicator.Indicator.new(
-            "blitztext", "idle_0", AppIndicator.IndicatorCategory.APPLICATION_STATUS)
+            "blablatext", "idle_0", AppIndicator.IndicatorCategory.APPLICATION_STATUS)
         self.indicator.set_icon_theme_path(self.renderer.theme_path)
         self.indicator.set_status(AppIndicator.IndicatorStatus.ACTIVE)
         self.indicator.set_title("blablatext")

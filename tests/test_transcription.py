@@ -13,7 +13,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest import mock
 
-from blitztext.services import transcription
+from blablatext.services import transcription
 
 
 class _FakeResponse:

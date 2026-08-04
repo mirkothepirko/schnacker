@@ -10,8 +10,8 @@ from __future__ import annotations
 import unittest
 from unittest import mock
 
-from blitztext.models import TextImprovementSettings, TextTone
-from blitztext.services import llm
+from blablatext.models import TextImprovementSettings, TextTone
+from blablatext.services import llm
 
 
 class FakeResponse:

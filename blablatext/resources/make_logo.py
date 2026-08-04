@@ -8,7 +8,7 @@ Motiv: abgerundetes Quadrat mit vier nach unten schmaler werdenden Balken.
 Wird nur bei Bedarf ausgeführt (braucht Pillow); die erzeugten PNGs liegen
 fertig im Repo, damit die App selbst ohne Pillow läuft:
 
-    python blitztext/resources/make_logo.py
+    python blablatext/resources/make_logo.py
 """
 from __future__ import annotations
 

@@ -2,8 +2,8 @@
 und die Speicher-Logik aus AppState.swift.
 
 Unter Linux gelten andere Standard-Ordner als auf dem Mac:
-    Einstellungen:  ~/.config/blitztext/settings.json
-    lokale Modelle: ~/.local/share/blitztext/models/
+    Einstellungen:  ~/.config/blablatext/settings.json
+    lokale Modelle: ~/.local/share/blablatext/models/
 
 Statt für jedes Feld eine eigene Lese-/Schreibzeile zu pflegen, laufen wir über
 die Felder der dataclasses (`dataclasses.fields`) und rechnen den Python-Namen in
@@ -39,8 +39,8 @@ def _xdg_dir(env_var: str, default: Path) -> Path:
     return Path(os.environ.get(env_var) or default)
 
 
-CONFIG_DIR = _xdg_dir("XDG_CONFIG_HOME", Path.home() / ".config") / "blitztext"
-DATA_DIR = _xdg_dir("XDG_DATA_HOME", Path.home() / ".local" / "share") / "blitztext"
+CONFIG_DIR = _xdg_dir("XDG_CONFIG_HOME", Path.home() / ".config") / "blablatext"
+DATA_DIR = _xdg_dir("XDG_DATA_HOME", Path.home() / ".local" / "share") / "blablatext"
 SETTINGS_PATH = CONFIG_DIR / "settings.json"
 MODELS_DIR = DATA_DIR / "models"
 
@@ -49,6 +49,31 @@ def ensure_directories() -> None:
     """Legt die Ordner an, falls sie noch nicht existieren."""
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     MODELS_DIR.mkdir(parents=True, exist_ok=True)
+
+
+# Vorgängername des Pakets — die Ordner hießen bis zur Umbenennung genauso.
+VORGAENGER_NAME = "blitztext"
+
+
+def migriere_vorgaenger_ordner() -> list[str]:
+    """Zieht Einstellungen und geladene Modelle der Vorgängerversion einmalig um.
+
+    Ohne diesen Schritt wären nach der Umbenennung die Einstellungen weg und die
+    schon geladenen Whisper-Modelle (mehrere GB) müssten neu herunterladen.
+    Umbenannt wird nur, wenn der alte Ordner da ist und der neue noch nicht —
+    ein vorhandener neuer Stand wird also nie überschrieben.
+
+    Wird absichtlich nur beim App-Start aufgerufen (nicht aus load()), damit ein
+    Testlauf niemals die echten Ordner des Nutzers anfasst.
+    """
+    umgezogen = []
+    for neu in (CONFIG_DIR, DATA_DIR):
+        alt = neu.with_name(VORGAENGER_NAME)
+        if alt.is_dir() and not neu.exists():
+            neu.parent.mkdir(parents=True, exist_ok=True)
+            alt.rename(neu)
+            umgezogen.append(str(neu))
+    return umgezogen
 
 
 # MARK: - Zusammengefasste Einstellungen --------------------------------------

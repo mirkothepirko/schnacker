@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import unittest
 
-from blitztext.services import transcription_quality as quality
+from blablatext.services import transcription_quality as quality
 
 
 class MindestlaengeTest(unittest.TestCase):
