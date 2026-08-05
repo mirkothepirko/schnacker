@@ -13,8 +13,8 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest import mock
 
-from blitztext import models
-from blitztext.services import settings_store
+from blablatext import models
+from blablatext.services import settings_store
 
 
 class JsonKeyTest(unittest.TestCase):

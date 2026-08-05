@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Einrichtungs-Skript für Schnacker (Ubuntu / GNOME / Wayland).
+# Einrichtungs-Skript für blablatext (Ubuntu / GNOME / Wayland).
 #
 # Was es tut:
 #   1. Installiert die nötigen System-Pakete (apt) — fragt einmal nach sudo.
@@ -42,7 +42,7 @@ fi
 # ---------------------------------------------------------------------------
 say "3/4  Auto-Einfügen (ydotool) + Tastatur-Kürzel (Push-to-Talk/Esc) einrichten"
 # udev-Regel: erlaubt der Gruppe 'input' den Zugriff auf /dev/uinput.
-UDEV_RULE="/etc/udev/rules.d/80-blitztext-uinput.rules"
+UDEV_RULE="/etc/udev/rules.d/80-blablatext-uinput.rules"
 if [ ! -f "$UDEV_RULE" ]; then
   echo 'KERNEL=="uinput", GROUP="input", MODE="0660", OPTIONS+="static_node=uinput"' \
     | sudo tee "$UDEV_RULE" >/dev/null
@@ -52,7 +52,7 @@ fi
 # Aktuellen Benutzer der Gruppe 'input' hinzufügen (greift erst nach Neu-Anmeldung).
 # Dieselbe Mitgliedschaft erlaubt zusätzlich zu ydotool/uinput auch das LESEN der
 # /dev/input/eventX-Geräte (Standard-Ubuntu-udev-Regel) — das braucht Push-to-Talk
-# (Strg+Super halten) und der Esc-Abbruch, siehe blitztext/services/global_hotkeys.py.
+# (Strg+Super halten) und der Esc-Abbruch, siehe blablatext/services/global_hotkeys.py.
 if ! id -nG "$USER" | grep -qw input; then
   sudo usermod -aG input "$USER"
   NEED_RELOGIN=1
@@ -68,7 +68,7 @@ if [ -n "$YDOTOOLD_BIN" ]; then
   mkdir -p "$SERVICE_DIR"
   cat > "$SERVICE_DIR/ydotoold.service" <<EOF
 [Unit]
-Description=ydotool daemon (für Schnacker Auto-Einfügen)
+Description=ydotool daemon (für blablatext Auto-Einfügen)
 
 [Service]
 ExecStart=$YDOTOOLD_BIN -p %t/.ydotool_socket -P 0660
@@ -88,22 +88,24 @@ fi
 say "4/4  Programmstarter (.desktop) anlegen"
 APPS_DIR="$HOME/.local/share/applications"
 mkdir -p "$APPS_DIR"
-cat > "$APPS_DIR/blitztext.desktop" <<EOF
+# Starter der Vorgängerversion entfernen, sonst stehen zwei Einträge im Menü.
+rm -f "$APPS_DIR/blitztext.desktop"
+cat > "$APPS_DIR/blablatext.desktop" <<EOF
 [Desktop Entry]
 Type=Application
-Name=Schnacker
+Name=blablatext
 Comment=Sprache zu Text in der Menüleiste
-Exec=$VENV_DIR/bin/python -m blitztext
+Exec=$VENV_DIR/bin/python -m blablatext
 Path=$PROJECT_DIR
-Icon=$PROJECT_DIR/blitztext/resources/icon.png
+Icon=$PROJECT_DIR/blablatext/resources/icon.png
 Terminal=false
 Categories=Utility;AudioVideo;
 EOF
 update-desktop-database "$APPS_DIR" 2>/dev/null || true
 
 say "Fertig!"
-echo "Starten mit:   $VENV_DIR/bin/python -m blitztext"
-echo "Oder über das Anwendungsmenü: 'Schnacker'."
+echo "Starten mit:   $VENV_DIR/bin/python -m blablatext"
+echo "Oder über das Anwendungsmenü: 'blablatext'."
 if [ "${NEED_RELOGIN:-0}" = "1" ]; then
   echo
   echo "WICHTIG: Bitte einmal ab- und wieder anmelden, damit das Auto-Einfügen (ydotool) funktioniert."

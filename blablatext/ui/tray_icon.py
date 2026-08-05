@@ -23,12 +23,13 @@ from ..state import MenuBarStatus, StatusKind
 _ICON_SIZE = 44  # Pixel; AppIndicator skaliert auf die Panel-Höhe herunter.
 _STRIPE_WIDTHS = [1.0, 0.83, 0.66, 0.5]  # relative Breiten (12,10,8,6 wie im Original)
 
-# Farben der Status-Abzeichen (R, G, B).
+# Farben der Status-Abzeichen (R, G, B). Rot/Grün sind bewusst universelle
+# Statusfarben; "Verarbeitung" nutzt die Akzentfarbe #F2A600 der Palette.
 _BADGE_COLORS = {
-    StatusKind.RECORDING: (0.93, 0.27, 0.24),   # rot
-    StatusKind.PROCESSING: (0.98, 0.69, 0.16),  # gelb/orange
-    StatusKind.SUCCESS: (0.30, 0.78, 0.36),     # grün
-    StatusKind.ERROR: (0.93, 0.27, 0.24),       # rot
+    StatusKind.RECORDING: (0.898, 0.224, 0.208),   # rot #E53935
+    StatusKind.PROCESSING: (0.949, 0.651, 0.0),    # gold #F2A600 (Akzent)
+    StatusKind.SUCCESS: (0.298, 0.604, 0.165),     # grün #4C9A2A
+    StatusKind.ERROR: (0.898, 0.224, 0.208),       # rot #E53935
 }
 
 

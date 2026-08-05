@@ -1,9 +1,9 @@
-"""Einstiegspunkt — gestartet mit `python -m blitztext`.
+"""Einstiegspunkt — gestartet mit `python -m blablatext`.
 
 Aufrufvarianten:
-    python -m blitztext                      App starten (Menüleisten-Symbol)
-    python -m blitztext --trigger <workflow> Workflow starten/stoppen (für GNOME-Kürzel)
-    python -m blitztext --install-shortcuts  GNOME-Kürzel Strg+Alt+1..4 einrichten
+    python -m blablatext                      App starten (Menüleisten-Symbol)
+    python -m blablatext --trigger <workflow> Workflow starten/stoppen (für GNOME-Kürzel)
+    python -m blablatext --install-shortcuts  GNOME-Kürzel Strg+Alt+1..4 einrichten
 """
 
 from __future__ import annotations
@@ -15,7 +15,7 @@ from .models import WorkflowType
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(prog="blitztext", description="Schnacker für Ubuntu")
+    parser = argparse.ArgumentParser(prog="blablatext", description="blablatext für Ubuntu")
     parser.add_argument("--trigger", metavar="WORKFLOW",
                         help="Workflow per Tastenkürzel starten/stoppen "
                              "(transcription, textImprover, dampfAblassen, emojiText).")
@@ -39,16 +39,22 @@ def main() -> None:
 
         from .app import send_trigger
         if not send_trigger(args.trigger):
-            print("Schnacker läuft nicht. Bitte zuerst die App starten.", file=sys.stderr)
+            print("blablatext läuft nicht. Bitte zuerst die App starten.", file=sys.stderr)
             sys.exit(1)
         return
 
     # Normale App starten — aber nur eine Instanz gleichzeitig.
-    from .app import SchnackerApp, is_running
+    from .app import BlablatextApp, is_running
     if is_running():
-        print("Schnacker läuft bereits (siehe Menüleisten-Symbol).")
+        print("blablatext läuft bereits (siehe Menüleisten-Symbol).")
         return
-    SchnackerApp().run()
+
+    # Vor dem ersten Lesen der Einstellungen: Ordner der Vorgängerversion übernehmen.
+    from .services.settings_store import migriere_vorgaenger_ordner
+    for ordner in migriere_vorgaenger_ordner():
+        print(f"Übernommen aus der Vorgängerversion: {ordner}")
+
+    BlablatextApp().run()
 
 
 if __name__ == "__main__":

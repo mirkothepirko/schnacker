@@ -6,9 +6,9 @@ import subprocess
 import unittest
 from unittest import mock
 
-from blitztext.services import keychain
-from blitztext.services import local_transcription as local
-from blitztext.services import paste
+from blablatext.services import keychain
+from blablatext.services import local_transcription as local
+from blablatext.services import paste
 
 
 class KeychainTest(unittest.TestCase):

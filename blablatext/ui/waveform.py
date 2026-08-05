@@ -18,6 +18,8 @@ from gi.repository import GLib, Gtk  # noqa: E402
 
 _BAR_COUNT = 40
 _MIN_LEVEL = 0.03
+# Akzentfarbe #F2A600 (Gold) aus der gemeinsamen Palette, als Cairo-RGB (0..1).
+_BAR_RGB = (0.949, 0.651, 0.0)
 
 
 class WaveformView(Gtk.DrawingArea):
@@ -64,7 +66,7 @@ class WaveformView(Gtk.DrawingArea):
             x = i * (bar_width + spacing)
             y = (height - bar_h) / 2
             opacity = 0.25 + level * 0.75
-            ctx.set_source_rgba(0.5, 0.5, 0.5, opacity)
+            ctx.set_source_rgba(*_BAR_RGB, opacity)
             self._rounded_bar(ctx, x, y, bar_width, bar_h)
             ctx.fill()
         return False

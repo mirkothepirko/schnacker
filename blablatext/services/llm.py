@@ -18,7 +18,7 @@ TIMEOUT_SECONDS = 45
 
 # Modelle wie im Original (enum RewriteModel).
 MODEL_FAST_EDIT = "gpt-4o-mini"  # Verbessern
-MODEL_RAGE = "gpt-4o"            # Schnacker Platt (kräftiges Modell für Dialekt-Übersetzung)
+MODEL_RAGE = "gpt-4o"            # Platt (kräftiges Modell für Dialekt-Übersetzung)
 
 
 class LLMError(Exception):
@@ -37,7 +37,7 @@ def dampf_ablassen(text: str, system_prompt: str, model: str = MODEL_RAGE) -> st
 
 
 def basel_deutsch(text: str, system_prompt: str, model: str = MODEL_RAGE) -> str:
-    """Übersetzt Hochdeutsch -> Baseldütsch (Schnacker Basel)."""
+    """Übersetzt Hochdeutsch -> Baseldütsch (Basel)."""
     return _complete(text, system_prompt, model, temperature=0.4)
 
 

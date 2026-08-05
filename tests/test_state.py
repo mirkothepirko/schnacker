@@ -12,9 +12,9 @@ from __future__ import annotations
 import unittest
 from unittest import mock
 
-from blitztext import models
-from blitztext.models import LaunchSource, PushToTalkTarget, WorkflowType
-from blitztext.services import settings_store
+from blablatext import models
+from blablatext.models import LaunchSource, PushToTalkTarget, WorkflowType
+from blablatext.services import settings_store
 
 
 def zustand(*, key_vorhanden: bool = True, lokal_an: bool = False,
@@ -25,7 +25,7 @@ def zustand(*, key_vorhanden: bool = True, lokal_an: bool = False,
     weil `is_workflow_available` sie bei jedem Aufruf erneut befragt. Aufgeräumt
     wird im `tearDown` des jeweiligen Tests über `mock.patch.stopall()`.
     """
-    from blitztext import state as state_modul
+    from blablatext import state as state_modul
 
     bundle = settings_store.SettingsBundle()
     bundle.app.secure_local_mode_enabled = lokal_an
@@ -94,8 +94,8 @@ class AnzeigenamenTest(unittest.TestCase):
 
     def test_ohne_eigenen_namen_gilt_der_standardname(self) -> None:
         st = zustand()
-        self.assertEqual(st.display_name(WorkflowType.TRANSCRIPTION), "Schnacker")
-        self.assertEqual(st.display_name(WorkflowType.TEXT_IMPROVER), "Schnacker+")
+        self.assertEqual(st.display_name(WorkflowType.TRANSCRIPTION), "Diktat")
+        self.assertEqual(st.display_name(WorkflowType.TEXT_IMPROVER), "Lektorat")
 
     def test_eigener_name_gewinnt(self) -> None:
         st = zustand()
@@ -105,7 +105,7 @@ class AnzeigenamenTest(unittest.TestCase):
     def test_eigener_name_aus_leerzeichen_wird_ignoriert(self) -> None:
         st = zustand()
         st.settings.dampf_ablassen.custom_name = "   "
-        self.assertEqual(st.display_name(WorkflowType.DAMPF_ABLASSEN), "Schnacker Platt")
+        self.assertEqual(st.display_name(WorkflowType.DAMPF_ABLASSEN), "Platt")
 
     def test_untertitel_zeigt_den_aktiven_transkriptions_weg(self) -> None:
         online = zustand(lokal_an=False)
@@ -130,7 +130,7 @@ class WorkflowStartTest(unittest.TestCase):
         mock.patch.stopall()
 
     def test_start_ohne_key_fuehrt_in_die_einstellungen(self) -> None:
-        from blitztext.state import Page
+        from blablatext.state import Page
 
         st = zustand(key_vorhanden=False)
         st.start_workflow(WorkflowType.TEXT_IMPROVER, LaunchSource.MANUAL)
@@ -139,7 +139,7 @@ class WorkflowStartTest(unittest.TestCase):
 
     def test_start_per_hotkey_ohne_key_bleibt_stumm(self) -> None:
         """Kein Fenster aufreißen, wenn der Nutzer nur ein Kürzel gedrückt hat."""
-        from blitztext.state import Page
+        from blablatext.state import Page
 
         st = zustand(key_vorhanden=False)
         st.page = Page.MAIN
@@ -151,30 +151,30 @@ class WorkflowStartTest(unittest.TestCase):
         st = zustand()
         for t in WorkflowType.main_menu_cases():
             with self.subTest(workflow=t):
-                with mock.patch("blitztext.workflows.base.Workflow.start"):
+                with mock.patch("blablatext.workflows.base.Workflow.start"):
                     st.start_workflow(t, LaunchSource.MANUAL)
                 self.assertIsNotNone(st.active_workflow)
                 self.assertEqual(st.active_workflow.type, t)
 
     def test_manueller_start_zeigt_die_workflow_seite(self) -> None:
-        from blitztext.state import Page
+        from blablatext.state import Page
 
         st = zustand()
-        with mock.patch("blitztext.workflows.base.Workflow.start"):
+        with mock.patch("blablatext.workflows.base.Workflow.start"):
             st.start_workflow(WorkflowType.TRANSCRIPTION, LaunchSource.MANUAL)
         self.assertEqual(st.page, Page.WORKFLOW)
 
     def test_hotkey_start_bleibt_auf_der_hauptseite(self) -> None:
-        from blitztext.state import Page
+        from blablatext.state import Page
 
         st = zustand()
-        with mock.patch("blitztext.workflows.base.Workflow.start"):
+        with mock.patch("blablatext.workflows.base.Workflow.start"):
             st.start_workflow(WorkflowType.TRANSCRIPTION, LaunchSource.HOTKEY_BACKGROUND)
         self.assertEqual(st.page, Page.MAIN)
 
     def test_neuer_start_stoppt_den_laufenden_workflow(self) -> None:
         st = zustand()
-        with mock.patch("blitztext.workflows.base.Workflow.start"):
+        with mock.patch("blablatext.workflows.base.Workflow.start"):
             st.start_workflow(WorkflowType.TRANSCRIPTION, LaunchSource.MANUAL)
             erster = st.active_workflow
             with mock.patch.object(erster, "stop") as stoppen:
@@ -183,13 +183,13 @@ class WorkflowStartTest(unittest.TestCase):
 
     def test_lokaler_modus_waehlt_das_lokale_backend(self) -> None:
         st = zustand(lokal_an=True, modell_installiert=True)
-        with mock.patch("blitztext.workflows.base.Workflow.start"):
+        with mock.patch("blablatext.workflows.base.Workflow.start"):
             st.start_workflow(WorkflowType.TRANSCRIPTION, LaunchSource.MANUAL)
         self.assertEqual(st.active_workflow.backend, models.TranscriptionBackend.LOCAL)
 
     def test_online_modus_waehlt_das_remote_backend(self) -> None:
         st = zustand(lokal_an=False)
-        with mock.patch("blitztext.workflows.base.Workflow.start"):
+        with mock.patch("blablatext.workflows.base.Workflow.start"):
             st.start_workflow(WorkflowType.TRANSCRIPTION, LaunchSource.MANUAL)
         self.assertEqual(st.active_workflow.backend, models.TranscriptionBackend.REMOTE)
 
@@ -198,7 +198,7 @@ class WorkflowStartTest(unittest.TestCase):
         st.settings.text_improvement.custom_terms = ["Flötotto"]
         for t in WorkflowType.main_menu_cases():
             with self.subTest(workflow=t):
-                with mock.patch("blitztext.workflows.base.Workflow.start"):
+                with mock.patch("blablatext.workflows.base.Workflow.start"):
                     st.start_workflow(t, LaunchSource.MANUAL)
                 self.assertEqual(st.active_workflow.custom_terms, ["Flötotto"])
 
@@ -210,7 +210,7 @@ class AusgabeTest(unittest.TestCase):
         mock.patch.stopall()
 
     def test_hotkey_start_fuegt_automatisch_ein(self) -> None:
-        from blitztext import state as state_modul
+        from blablatext import state as state_modul
 
         st = zustand()
         st._active_launch_source = LaunchSource.HOTKEY_BACKGROUND
@@ -222,7 +222,7 @@ class AusgabeTest(unittest.TestCase):
         kopieren.assert_not_called()
 
     def test_manueller_start_kopiert_nur(self) -> None:
-        from blitztext import state as state_modul
+        from blablatext import state as state_modul
 
         st = zustand()
         st._active_launch_source = LaunchSource.MANUAL
@@ -237,7 +237,7 @@ class AusgabeTest(unittest.TestCase):
 class MenuBarStatusTest(unittest.TestCase):
 
     def test_gleiche_werte_sind_gleich(self) -> None:
-        from blitztext.state import MenuBarStatus, StatusKind
+        from blablatext.state import MenuBarStatus, StatusKind
 
         a = MenuBarStatus(StatusKind.RECORDING, WorkflowType.TRANSCRIPTION)
         b = MenuBarStatus(StatusKind.RECORDING, WorkflowType.TRANSCRIPTION)
@@ -246,7 +246,7 @@ class MenuBarStatusTest(unittest.TestCase):
         self.assertNotEqual(a, c)
 
     def test_idle_hat_keinen_workflow(self) -> None:
-        from blitztext.state import MenuBarStatus, StatusKind
+        from blablatext.state import MenuBarStatus, StatusKind
 
         self.assertIsNone(MenuBarStatus(StatusKind.IDLE).workflow_type)
 

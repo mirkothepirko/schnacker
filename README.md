@@ -1,4 +1,4 @@
-# Schnacker für Ubuntu
+# blablatext für Ubuntu
 
 Sprache in Text verwandeln — direkt aus der Menüleiste. Diese App ist eine
 **eigenständige Linux-Neuentwicklung**, inspiriert von der macOS-App
@@ -9,10 +9,10 @@ Sie bietet vier Workflows — die ersten beiden wie im Original, die letzten bei
 
 | Workflow | Was es tut | Modell |
 |---|---|---|
-| **Schnacker** | Sprache aufnehmen und transkribieren | OpenAI Whisper **oder** lokal (offline) |
-| **Schnacker+** | Transkript zu sauberem Text lektorieren | OpenAI GPT‑4o‑mini |
-| **Schnacker Platt** | Hochdeutsch nach Plattdeutsch übersetzen | OpenAI GPT‑4o |
-| **Schnacker Basel** | Hochdeutsch nach Baseldütsch übersetzen | OpenAI GPT‑4o |
+| **Diktat** | Sprache aufnehmen und transkribieren | OpenAI Whisper **oder** lokal (offline) |
+| **Lektorat** | Transkript zu sauberem Text lektorieren | OpenAI GPT‑4o‑mini |
+| **Platt** | Hochdeutsch nach Plattdeutsch übersetzen | OpenAI GPT‑4o |
+| **Basel** | Hochdeutsch nach Baseldütsch übersetzen | OpenAI GPT‑4o |
 
 > Warum eine Neuentwicklung statt Portierung? Das Original ist in Swift/SwiftUI mit
 > Apples WhisperKit geschrieben — das läuft ausschließlich auf macOS. Unter Linux
@@ -53,15 +53,24 @@ Das Skript macht der Reihe nach (und fragt dabei **einmal nach deinem sudo-Passw
 > dich **einmal ab- und wieder anmelden**, damit das automatische Einfügen funktioniert.
 > Vorher landet der Text trotzdem in der Zwischenablage (du fügst dann mit `Strg+V` ein).
 
+### Update von der Vorgängerversion (hieß „Schnacker" / Paket `blitztext`)
+
+Beim ersten Start übernimmt die App automatisch, was vorher schon da war:
+Einstellungen (`~/.config/blitztext` → `~/.config/blablatext`), die geladenen
+Whisper-Modelle (`~/.local/share/…`) und den OpenAI-Key aus dem Schlüsselbund.
+Nur die **GNOME-Tastenkürzel** zeigen noch auf den alten Paketnamen — einmal
+`./setup.sh` oder `.venv/bin/python -m blablatext --install-shortcuts` ausführen,
+dann stimmen auch die wieder.
+
 ---
 
 ## Starten
 
 ```bash
-.venv/bin/python -m blitztext
+.venv/bin/python -m blablatext
 ```
 
-…oder einfach **„Schnacker"** im Anwendungsmenü suchen und anklicken.
+…oder einfach **„blablatext"** im Anwendungsmenü suchen und anklicken.
 
 Es erscheint ein **Symbol oben rechts in der Leiste**. Ein Klick darauf öffnet das Menü
 mit den Workflows, den Einstellungen und „Beenden".
@@ -97,10 +106,10 @@ mit den Workflows, den Einstellungen und „Beenden".
 
   | Kürzel | Workflow |
   |---|---|
-  | `Strg+Alt+1` | Schnacker (Diktat) |
-  | `Strg+Alt+2` | Schnacker+ |
-  | `Strg+Alt+3` | Schnacker Platt |
-  | `Strg+Alt+4` | Schnacker Basel |
+  | `Strg+Alt+1` | Diktat |
+  | `Strg+Alt+2` | Lektorat |
+  | `Strg+Alt+3` | Platt |
+  | `Strg+Alt+4` | Basel |
 
 - **Push-to-Talk:** `Strg+Super` (Windows-Taste) **halten** startet die Aufnahme,
   **loslassen** stoppt sie und fügt automatisch ein. `Esc` verwirft eine laufende
@@ -108,7 +117,7 @@ mit den Workflows, den Einstellungen und „Beenden".
 
   Welcher Workflow auf `Strg+Super` liegt, wählst du im Tab „Anpassen" unter
   **Tastenkürzel** — alle vier Workflows stehen zur Wahl, dazu **„Aus"**. „Aus" schaltet
-  Push-to-Talk und den Esc-Abbruch komplett ab: dann startet Schnacker den
+  Push-to-Talk und den Esc-Abbruch komplett ab: dann startet blablatext den
   Tastatur-Listener gar nicht und liest keine Tastendrücke mit. Die Umschaltung auf
   bzw. von „Aus" wirkt erst nach einem Neustart der App.
 
@@ -117,7 +126,7 @@ mit den Workflows, den Einstellungen und „Beenden".
 Im Tab „Anpassen" (oder direkt im Hauptmenü über den Schalter) lässt sich der lokale
 Modus einschalten. Dann wird **nichts an OpenAI gesendet** — die Transkription läuft mit
 **faster‑whisper** komplett auf deinem Rechner. Das Modell (Standard: „Whisper Small")
-wird beim ersten Mal heruntergeladen. Hinweis: Die drei KI-Workflows (Schnacker+, Platt,
+wird beim ersten Mal heruntergeladen. Hinweis: Die drei KI-Workflows (Lektorat, Platt,
 Basel) sind im lokalen Modus pausiert, weil sie OpenAI brauchen — genau wie im Original.
 
 ---
@@ -144,20 +153,20 @@ Wayland sperrt aus Sicherheitsgründen einige Dinge, die das macOS-Original nutz
   Halten/Loslassen — sie können nur „Taste gedrückt → Befehl ausführen".
 - **Push-to-Talk** (`Strg+Super` halten) und der **Esc-Abbruch** laufen deshalb über
   einen eigenen, rohen Tastatur-Listener (`evdev`, siehe
-  `blitztext/services/global_hotkeys.py`) statt über GNOME-Kürzel — das ist unter
+  `blablatext/services/global_hotkeys.py`) statt über GNOME-Kürzel — das ist unter
   Wayland der einzige Weg, Halten und Loslassen zu unterscheiden.
 
   Der Listener öffnet die Tastaturen **nur lesend** und ruft nie `grab()` auf: die
   Tasten kommen ganz normal auch bei allen anderen Programmen an, er hört nur mit.
-  Das heißt aber auch, dass Schnacker währenddessen alle Tastendrücke sieht. Wer das
+  Das heißt aber auch, dass blablatext währenddessen alle Tastendrücke sieht. Wer das
   nicht möchte, stellt `Strg+Super` auf **„Aus"** — dann wird der Listener nicht
   gestartet. Nichts davon verlässt den Rechner.
 - **Auto-Einfügen** funktioniert nur bei Start über ein Tastenkürzel oder Push-to-Talk.
   Beim Start über das Fenster geht der Text in die Zwischenablage (Wayland erlaubt kein
   zuverlässiges Zurückspringen ins vorherige Fenster).
 
-Die Bedienlogik, die deutschen Texte und die ersten beiden Workflows (Diktat, Schnacker+)
-folgen dem Original. **Schnacker Platt** und **Schnacker Basel** sind eigene Anpassungen und
+Die Bedienlogik, die deutschen Texte und die ersten beiden Workflows (Diktat, Lektorat)
+folgen dem Original. **Platt** und **Basel** sind eigene Anpassungen und
 ersetzen die Originalfunktionen „$%&!" (Frust entschärfen) und „:)" (Emojis einstreuen).
 
 ---
@@ -191,7 +200,7 @@ python3 tests/gui_smoke.py
 - **Push-to-Talk (`Strg+Super`) oder Esc-Abbruch reagieren nicht:** meist fehlt die
   Gruppe `input` — nach `./setup.sh` einmal ab- und wieder anmelden (dieselbe
   Mitgliedschaft wie für ydotool). Prüfen mit `groups | grep input`. Startest du
-  Schnacker im Terminal (`.venv/bin/python -m blitztext`), nennt eine Zeile
+  blablatext im Terminal (`.venv/bin/python -m blablatext`), nennt eine Zeile
   `[global_hotkeys] …` den Grund. Die Funktion schaltet sich dann nur selbst ab, der
   Rest der App läuft normal weiter. Und: steht die Auswahl auf „Aus", ist es Absicht.
 - **Kein Mikrofon:** in den Ubuntu-Einstellungen unter *Ton → Eingang* das richtige Gerät
@@ -203,7 +212,7 @@ python3 tests/gui_smoke.py
 ## Projektstruktur (spiegelt das Original)
 
 ```
-blitztext/
+blablatext/
   models.py             Typen & Einstellungen        (~ WorkflowProtocol.swift)
   state.py              Zentraler Zustand            (~ AppState.swift)
   app.py                Tray, Fenster, Socket        (~ BlitztextMacApp.swift)

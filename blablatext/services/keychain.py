@@ -11,7 +11,11 @@ import keyring
 import keyring.errors
 
 # Name, unter dem unser Eintrag im Schlüsselbund liegt.
-_SERVICE_NAME = "app.blitztext"
+_SERVICE_NAME = "app.blablatext"
+# Name vor der Umbenennung. Der Schlüsselbund kann Einträge nicht "umziehen",
+# also lesen wir beim ersten Mal noch dort und schreiben den Key unter dem neuen
+# Namen zurück — sonst müsste jeder bestehende Nutzer seinen Key neu eintragen.
+_ALTER_SERVICE_NAME = "app.blitztext"
 _KEY_NAME = "openai_api_key"
 
 # Kleiner Zwischenspeicher (Cache), damit nicht bei jedem Tastendruck der
@@ -27,9 +31,19 @@ def load() -> str | None:
         return _cached  # type: ignore[return-value]
     try:
         _cached = keyring.get_password(_SERVICE_NAME, _KEY_NAME)
+        if _cached is None:
+            _cached = _uebernimm_alten_eintrag()
     except keyring.errors.KeyringError:
         _cached = None
     return _cached
+
+
+def _uebernimm_alten_eintrag() -> str | None:
+    """Holt den Key aus dem Eintrag der Vorgängerversion und schreibt ihn neu."""
+    alt = keyring.get_password(_ALTER_SERVICE_NAME, _KEY_NAME)
+    if alt:
+        keyring.set_password(_SERVICE_NAME, _KEY_NAME, alt)
+    return alt
 
 
 def save(value: str) -> None:

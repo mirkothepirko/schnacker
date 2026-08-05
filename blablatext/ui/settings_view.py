@@ -199,7 +199,7 @@ class SettingsView(Gtk.Box):
 
     def _text_improver_section(self) -> Gtk.Box:
         s = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
-        s.pack_start(_section_label("Schnacker+"), False, False, 0)
+        s.pack_start(_section_label("Lektorat"), False, False, 0)
 
         s.pack_start(Gtk.Label(label="Schreibstil", xalign=0), False, False, 0)
         self._tone_combo = self._melde_dropdown(Gtk.ComboBoxText())
@@ -238,7 +238,7 @@ class SettingsView(Gtk.Box):
 
     def _dampf_section(self) -> Gtk.Box:
         s = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
-        s.pack_start(_section_label("Schnacker Platt"), False, False, 0)
+        s.pack_start(_section_label("Platt"), False, False, 0)
         s.pack_start(Gtk.Label(label="Eigene Anweisung", xalign=0), False, False, 0)
         self._dampf_prompt = self._make_textview(
             self.app_state.settings.dampf_ablassen.system_prompt, height=90)
@@ -252,7 +252,7 @@ class SettingsView(Gtk.Box):
 
     def _emoji_section(self) -> Gtk.Box:
         s = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
-        s.pack_start(_section_label("Schnacker Basel"), False, False, 0)
+        s.pack_start(_section_label("Basel"), False, False, 0)
         s.pack_start(Gtk.Label(label="Eigene Anweisung", xalign=0), False, False, 0)
         self._emoji_prompt = self._make_textview(
             self.app_state.settings.emoji_text.system_prompt, height=90)
@@ -340,7 +340,9 @@ class SettingsView(Gtk.Box):
         paste_btn.connect("clicked", self._on_paste_key)
         key_buttons.pack_start(paste_btn, False, False, 0)
         save_btn = Gtk.Button(label="Speichern")
-        save_btn.get_style_context().add_class("suggested-action")
+        # Eigene Marken-Klasse statt GTK-Stock "suggested-action": die Farbe soll
+        # aus unserer Palette kommen, nicht vom jeweiligen GNOME-Theme.
+        save_btn.get_style_context().add_class("brand-action")
         save_btn.connect("clicked", self._on_save_key)
         key_buttons.pack_start(save_btn, False, False, 0)
         key_section.pack_start(key_buttons, False, False, 0)

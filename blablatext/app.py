@@ -40,7 +40,7 @@ from .ui.tray_icon import TrayIconRenderer
 def socket_path() -> str:
     """Pfad des Steuer-Sockets (für Einzel-Instanz + Tastenkürzel-Befehle)."""
     runtime = os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")
-    return f"{runtime}/blitztext.sock"
+    return f"{runtime}/blablatext.sock"
 
 
 # MARK: - Trigger-Client (für `--trigger`) ------------------------------------
@@ -64,14 +64,14 @@ def send_trigger(workflow_name: str = "") -> bool:
 
 
 def is_running() -> bool:
-    """True, wenn bereits eine Schnacker-Instanz auf dem Socket lauscht."""
+    """True, wenn bereits eine blablatext-Instanz auf dem Socket lauscht."""
     return send_trigger()
 
 
 # MARK: - Haupt-App -----------------------------------------------------------
 
 
-class SchnackerApp:
+class BlablatextApp:
     def __init__(self) -> None:
         self.app_state = AppState()
         self.renderer = TrayIconRenderer()
@@ -80,10 +80,10 @@ class SchnackerApp:
 
         # AppIndicator (Menüleisten-Symbol)
         self.indicator = AppIndicator.Indicator.new(
-            "blitztext", "idle_0", AppIndicator.IndicatorCategory.APPLICATION_STATUS)
+            "blablatext", "idle_0", AppIndicator.IndicatorCategory.APPLICATION_STATUS)
         self.indicator.set_icon_theme_path(self.renderer.theme_path)
         self.indicator.set_status(AppIndicator.IndicatorStatus.ACTIVE)
-        self.indicator.set_title("Schnacker")
+        self.indicator.set_title("blablatext")
         self.indicator.set_menu(self._build_menu())
 
         # Popover-Fenster
@@ -101,7 +101,7 @@ class SchnackerApp:
     def _build_menu(self) -> Gtk.Menu:
         menu = Gtk.Menu()
 
-        open_item = Gtk.MenuItem(label="Schnacker öffnen")
+        open_item = Gtk.MenuItem(label="blablatext öffnen")
         open_item.connect("activate", lambda _i: self.show_popover())
         menu.append(open_item)
         menu.append(Gtk.SeparatorMenuItem())
@@ -162,14 +162,14 @@ class SchnackerApp:
         kind = status.kind
         t = status.workflow_type
         if kind is StatusKind.IDLE:
-            return "Schnacker ist bereit"
-        name = t.display_name if t else "Schnacker"
+            return "blablatext ist bereit"
+        name = t.display_name if t else "blablatext"
         return {
             StatusKind.RECORDING: f"{name}: Aufnahme läuft",
             StatusKind.PROCESSING: f"{name}: Verarbeitung läuft",
             StatusKind.SUCCESS: f"{name}: Fertig",
             StatusKind.ERROR: f"{name}: Fehler",
-        }.get(kind, "Schnacker")
+        }.get(kind, "blablatext")
 
     def _on_ui_refresh(self) -> None:
         # Wird teils aus Hintergrund-Threads über GLib.idle_add gerufen -> hier sind wir sicher.

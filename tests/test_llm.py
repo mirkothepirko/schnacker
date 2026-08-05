@@ -10,8 +10,8 @@ from __future__ import annotations
 import unittest
 from unittest import mock
 
-from blitztext.models import TextImprovementSettings, TextTone
-from blitztext.services import llm
+from blablatext.models import TextImprovementSettings, TextTone
+from blablatext.services import llm
 
 
 class FakeResponse:
@@ -116,7 +116,7 @@ class CompleteTest(unittest.TestCase):
 
 
 class SystemPromptTest(unittest.TestCase):
-    """Der zusammengebaute Lektorats-Prompt für Schnacker+."""
+    """Der zusammengebaute Lektorats-Prompt für Lektorat."""
 
     def test_eigener_prompt_ersetzt_den_standard(self) -> None:
         s = TextImprovementSettings(system_prompt="Nur Rechtschreibung.")

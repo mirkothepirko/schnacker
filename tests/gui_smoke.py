@@ -16,12 +16,12 @@ gi.require_version("Gtk", "3.0")
 from gi.repository import GLib, Gtk
 from unittest import mock
 
-from blitztext.app import SchnackerApp, socket_path, send_trigger, is_running
-from blitztext.state import Page
-from blitztext.models import WorkflowType
+from blablatext.app import BlablatextApp, socket_path, send_trigger, is_running
+from blablatext.state import Page
+from blablatext.models import WorkflowType
 
-with mock.patch("blitztext.services.keychain.is_configured", return_value=True):
-    app = SchnackerApp()
+with mock.patch("blablatext.services.keychain.is_configured", return_value=True):
+    app = BlablatextApp()
     app.start_socket_server()
     print("App gebaut, Socket lauscht:", is_running())
 
@@ -73,8 +73,8 @@ with mock.patch("blitztext.services.keychain.is_configured", return_value=True):
 
     # Push-to-Talk: "Aus" darf den rohen Tastatur-Listener gar nicht starten —
     # das ist der Sinn der Option (die App liest dann keine Tastendrücke mit).
-    from blitztext.models import PushToTalkTarget
-    from blitztext.services import global_hotkeys
+    from blablatext.models import PushToTalkTarget
+    from blablatext.services import global_hotkeys
 
     for ziel, soll_starten in ((PushToTalkTarget.OFF, False),
                                (PushToTalkTarget.TRANSCRIPTION, True)):
@@ -86,7 +86,7 @@ with mock.patch("blitztext.services.keychain.is_configured", return_value=True):
         assert gestartet is soll_starten, f"Listener-Start bei {ziel.value} falsch"
 
     # Status-Animation durchschalten (rendert Icons + Tooltips)
-    from blitztext.state import MenuBarStatus, StatusKind
+    from blablatext.state import MenuBarStatus, StatusKind
     for kind in StatusKind:
         app._on_status_change(MenuBarStatus(kind, WorkflowType.TRANSCRIPTION))
     print("Alle Menüleisten-Status gerendert")

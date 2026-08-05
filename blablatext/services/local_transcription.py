@@ -2,7 +2,7 @@
 
 Statt WhisperKit/CoreML (nur Apple) nutzen wir **faster-whisper** (CTranslate2),
 das auf jedem Linux-Rechner läuft. Die Modelle werden bei Bedarf von Hugging Face
-geladen und in ~/.local/share/blitztext/models/ zwischengespeichert.
+geladen und in ~/.local/share/blablatext/models/ zwischengespeichert.
 
 Wir bieten dieselben drei Stufen wie das Original an:
     "small"          -> Whisper Small (empfohlen, schnell)        [Standard]

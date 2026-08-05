@@ -10,7 +10,7 @@ Werte der evdev-Ereignisse: 1 = drücken, 0 = loslassen, 2 = Auto-Wiederholung.
 """
 import unittest
 
-from blitztext.services.global_hotkeys import HeldKeysTracker
+from blablatext.services.global_hotkeys import HeldKeysTracker
 
 DRUECKEN, LOSLASSEN, WIEDERHOLUNG = 1, 0, 2
 

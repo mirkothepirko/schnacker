@@ -1,4 +1,4 @@
-"""Die drei Workflows mit zweitem Schritt — Schnacker+, Platt und Basel.
+"""Die drei Workflows mit zweitem Schritt — Lektorat, Platt und Basel.
 
 Alle drei laufen identisch ab:
 
@@ -65,7 +65,7 @@ class LLMWorkflow(Workflow):
 
 
 def text_improvement(settings: TextImprovementSettings, language: str = "de") -> LLMWorkflow:
-    """Schnacker+ — Lektorat. Eigennamen kommen aus diesen Einstellungen."""
+    """Lektorat. Eigennamen kommen aus diesen Einstellungen."""
     return LLMWorkflow(
         WorkflowType.TEXT_IMPROVER,
         status_text="Text wird verbessert ...",
@@ -77,7 +77,7 @@ def text_improvement(settings: TextImprovementSettings, language: str = "de") ->
 
 def dampf_ablassen(settings: DampfAblassenSettings, custom_terms: list[str] | None = None,
                    language: str = "de") -> LLMWorkflow:
-    """Schnacker Platt — Hochdeutsch nach Plattdeutsch."""
+    """Platt — Hochdeutsch nach Plattdeutsch."""
     return LLMWorkflow(
         WorkflowType.DAMPF_ABLASSEN,
         status_text="Wird ins Platt übersetzt ...",
@@ -89,7 +89,7 @@ def dampf_ablassen(settings: DampfAblassenSettings, custom_terms: list[str] | No
 
 def basel_deutsch(settings: EmojiTextSettings, custom_terms: list[str] | None = None,
                   language: str = "de") -> LLMWorkflow:
-    """Schnacker Basel — Hochdeutsch nach Baseldütsch.
+    """Basel — Hochdeutsch nach Baseldütsch.
 
     (Interner Name bleibt "emojiText", damit Tastenkürzel/Einstellungen stabil bleiben.)
     """

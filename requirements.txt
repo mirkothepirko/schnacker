@@ -1,4 +1,4 @@
-# Python-Abhängigkeiten für Schnacker (Ubuntu).
+# Python-Abhängigkeiten für blablatext (Ubuntu).
 # Installation in die venv via setup.sh. PyGObject/GTK kommen aus den System-Paketen
 # (deshalb wird die venv mit --system-site-packages angelegt).
 

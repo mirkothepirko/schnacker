@@ -39,7 +39,7 @@ class AudioRecorder:
         self._current_path: Path | None = None
 
     def _make_recording_path(self) -> Path:
-        return Path(gettempdir()) / f"blitztext-{uuid.uuid4()}.wav"
+        return Path(gettempdir()) / f"blablatext-{uuid.uuid4()}.wav"
 
     # MARK: - Aufnahme-Callback (läuft im Audio-Thread) -----------------------
 
